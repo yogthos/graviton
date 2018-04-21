@@ -1,5 +1,7 @@
 (ns graviton.engine
-  (:require [reagent.core :as r]))
+  (:require
+    [clojure.walk :refer [prewalk]]
+    [reagent.core :as r]))
 
 (defn load-texture [resource-name]
   (.fromImage (.-Texture js/PIXI) (str "assets/" resource-name)))
