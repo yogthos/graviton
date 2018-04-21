@@ -41,7 +41,7 @@
                                   :update move-ship}]})]
     [:div
      [:h2 "Graviton"]
-     #_[canvas state]]))
+     [canvas state]]))
 
 ;; -------------------------
 ;; Initialize app
