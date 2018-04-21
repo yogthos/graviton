@@ -14,3 +14,4 @@ pom.xml.asc
 /.repl
 *.log
 /.env
+*.iml
