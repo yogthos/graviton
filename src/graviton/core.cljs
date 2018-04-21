@@ -13,35 +13,43 @@
     {:component-did-mount (engine/init-canvas state)
      :render (fn [] [:canvas {:width 500 :height 500}])}))
 
-(defn move-ship [ship width height]
-  (-> ship
-      (update :x #(if (> % width) -1 (inc %)))
-      #_(update :y #(if (> % height) -1 (inc %)))))
+(defn delta-x [{:keys [r theta]} delta]
+  (* delta r (js/Math.cos theta)))
 
-(defn update-actors [actors width height]
+(defn delta-y [{:keys [r theta]} delta]
+  (* delta r (js/Math.sin theta)))
+
+(defn move-ship [{:keys [velocity] :as ship} {:keys [width height delta]}]
+  (-> ship
+      (update :x #(if (> % width) -1 (+ % (delta-x velocity delta))))
+      (update :y #(if (> % height) -1 (+ % (delta-y velocity delta))))))
+
+(defn update-actors [state]
   (postwalk
     (fn [node]
       (if (:sprite node)
-        (let [updated-node ((:update node) node width height)]
+        (let [updated-node ((:update node) node state)]
           (engine/move-sprite updated-node)
           updated-node)
         node))
-    actors))
+    (:actors state)))
 
-(defn update-game-state [{:keys [width height] :as state}]
-  (update state :actors update-actors width height))
+(defn update-game-state [state]
+  (assoc state :actors (update-actors state)))
 
+(def state (atom
+                {:update update-game-state
+                 :actors [{:id     :ship
+                           :sprite (engine/sprite "ship.gif")
+                           :velocity {:r 5
+                                      :theta 0.1}
+                           :x      0
+                           :y      100
+                           :update move-ship}]}))
 (defn game []
-  (r/with-let [state (atom
-                       {:update update-game-state
-                        :actors [{:id     :ship
-                                  :sprite (engine/sprite "ship.gif")
-                                  :x      0
-                                  :y      100
-                                  :update move-ship}]})]
-    [:div
-     [:h2 "Graviton"]
-     [canvas state]]))
+  [:div
+   [:h2 "Graviton"]
+   [canvas state]])
 
 ;; -------------------------
 ;; Initialize app

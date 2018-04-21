@@ -6,10 +6,11 @@
 
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.238"]
-                 [reagent "0.7.0"]]
+                 [re-frame "0.10.5"]
+                 [reagent "0.8.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
-            [lein-figwheel "0.5.15"]]
+            [lein-figwheel "0.5.16-SNAPSHOT"]]
 
   :min-lein-version "2.5.0"
   :clean-targets ^{:protect false}
@@ -18,10 +19,11 @@
    [:cljsbuild :builds :app :compiler :output-to]]
 
   :resource-paths ["public"]
-
+  :source-paths ["src" "env/dev/cljs"]
+  :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
   :figwheel {:http-server-root "."
              :nrepl-port 7002
-             :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"]
+             :nrepl-middleware ["cider.piggieback/wrap-cljs-repl"]
              :css-dirs ["public/css"]}
 
   :cljsbuild {:builds {:app
@@ -35,8 +37,7 @@
                          :optimizations :none
                          :pretty-print  true}
                         :figwheel
-                        {:on-jsload "graviton.core/mount-root"
-                         :open-urls ["http://localhost:3449/index.html"]}}
+                        {:on-jsload "graviton.core/mount-root"}}
                        :release
                        {:source-paths ["src" "env/prod/cljs"]
                         :compiler
@@ -49,6 +50,6 @@
   :aliases {"package" ["do" "clean" ["cljsbuild" "once" "release"]]}
 
   :profiles {:dev {:dependencies [[binaryage/devtools "0.9.7"]
-                                  [figwheel-sidecar "0.5.15"]
+                                  [figwheel-sidecar "0.5.16-SNAPSHOT"]
                                   [org.clojure/tools.nrepl "0.2.13"]
-                                  [com.cemerick/piggieback "0.2.2"]]}})
+                                  [cider/piggieback "0.3.1"]]}})

@@ -7,11 +7,15 @@
   (.fromImage (.-Texture js/PIXI) (str "assets/" resource-name)))
 
 (defn sprite [resource-name]
-  (js/PIXI.Sprite. (load-texture resource-name)))
+  (let [sprite (js/PIXI.Sprite. (load-texture resource-name))]
+    (.set (.-anchor sprite) 0.5)
+    sprite))
 
-(defn move-sprite [{:keys [sprite x y]}]
+(defn move-sprite [{:keys [sprite x y velocity]}]
   (set! (.-x (.-position sprite)) x)
-  (set! (.-y (.-position sprite)) y))
+  (set! (.-y (.-position sprite)) y)
+  (set! (.-rotation sprite) (:theta velocity))
+  )
 
 (defn add-to-stage [stage actor]
   (.addChild stage (:sprite actor)))
@@ -41,25 +45,29 @@
 (defn add-actors-to-stage [state]
   (let [{:keys [stage actors]} @state]
     (prewalk
-      (fn [node] (when (:sprite node) (add-to-stage stage node)) node)
-      actors)))
+     (fn [node] (when (:sprite node) (add-to-stage stage node)) node)
+     actors)))
 
-(defn game-loop [state]
-  (add-actors-to-stage state)
-  ((fn tick []
-     (let [{:keys [update]} @state]
-       (js/setTimeout tick 10 (swap! state update))))))
+(defn init-game-loop [state]
+  (.add (:ticker @state)
+        (fn [delta]
+          (swap! state
+                 #((:update %) (assoc % :delta delta))))))
 
 (defn init-canvas [state]
   (fn [component]
     (let [canvas (r/dom-node component)
           width  (int (.-width canvas))
-          height (int (.-height canvas))]
+          height (int (.-height canvas))
+          ticker (js/PIXI.ticker.Ticker.)]
       (swap! state assoc
              :canvas canvas
              :width width
              :height height
              :stage (init-stage)
-             :renderer (init-renderer canvas width height))
-      (game-loop state)
+             :renderer (init-renderer canvas width height)
+             :ticker ticker)
+      (add-actors-to-stage state)
+      (init-game-loop state)
+      (.start ticker)
       (render-loop state))))
