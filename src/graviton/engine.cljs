@@ -46,20 +46,24 @@
                                              r (/ mass (+ (* dx dx) (* dy dy)))
                                              theta (js/Math.atan (/ dy dx))]
                                          {:x (* (if (> px x) -1 1) r (js/Math.cos theta))
-                                          :y (*  (if (> px x) -1 1) r (js/Math.sin theta))})) actors)))
+                                          :y (*  (if (>= px x) -1 1) r (js/Math.sin theta))})) actors)))
+
+(defn sigmoid [v]
+  (/ v (+ 1 (js/Math.abs v))))
 
 (defn draw-gravity-vector [graphics x y state]
   (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (:actors state))
-        ax (* 30 ax)
-        ay (* 30 ay)
-        magnitude (min 0xff (* (/ 0xff 10) (+ (* ax ax) (* ay ay))))
-        color (+ (* magnitude 0x10000) (- 0xff00 (* magnitude 0x100)))]
+        ax (* 50 ax)
+        ay (* 50 ay)
+        magnitude (+ (* ax ax) (* ay ay))
+        color-coefficient (js/Math.ceil (* 0xff (sigmoid (/ magnitude 1.5))))
+        color (+ (* (js/Math.ceil (* 0xff (sigmoid (/ magnitude 0.5)))) 0x10000) (- 0xff00 (* (js/Math.ceil (* 0xff (sigmoid (/ magnitude 20)))) 0x100)))]
     (.moveTo graphics x y)
     (set! (.-lineColor graphics) color)
-    (set! (.-lineWidth graphics) 1)
+    (set! (.-lineWidth graphics) 2)
     (.lineTo graphics
-             (+ x ax)
-             (+ y ay))))
+             (+ x (* 3 (sigmoid ax)))
+             (+ y (* 3 (sigmoid ay))))))
 
 (defn draw-vector-field [state]
   (.clear (:vector-field state))

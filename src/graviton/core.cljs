@@ -63,9 +63,9 @@
                            :sprite (engine/sprite "ship.gif")
                            :velocity {:y 0
                                       :x 2}
-                           :x      250
-                           :y      200
-                           :mass 1
+                           :x      150
+                           :y      170
+                           :mass 250
                            :update move-ship}
                           {:id :attractor-1
                            :sprite (engine/sprite "circle.png")
