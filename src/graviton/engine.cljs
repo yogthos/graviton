@@ -14,6 +14,9 @@
 (defn add-to-stage [stage actor]
   (.addChild stage (:sprite actor)))
 
+(defn remove-from-stage [stage actor]
+  (.removeChild stage (:sprite actor)))
+
 (defn init-stage []
   (js/PIXI.Container.))
 
