@@ -10,7 +10,7 @@
 ;; Views
 (defn canvas [state]
   (r/create-class
-    {:component-did-mount engine/init-canvas
+    {:component-did-mount (engine/init-canvas state)
      :render (fn [] [:canvas {:width 500 :height 500}])}))
 
 (defn move-ship [ship width height]

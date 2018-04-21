@@ -48,15 +48,16 @@
      (let [{:keys [update]} @state]
        (js/setTimeout tick 10 (swap! state update))))))
 
-(defn init-canvas [component]
-  (let [canvas (r/dom-node component)
-        width  (int (.-width canvas))
-        height (int (.-height canvas))]
-    (swap! state assoc
-           :canvas canvas
-           :width width
-           :height height
-           :stage (init-stage)
-           :renderer (init-renderer canvas width height))
-    (game-loop state)
-    (render-loop state)))
+(defn init-canvas [state]
+  (fn [component]
+    (let [canvas (r/dom-node component)
+          width  (int (.-width canvas))
+          height (int (.-height canvas))]
+      (swap! state assoc
+             :canvas canvas
+             :width width
+             :height height
+             :stage (init-stage)
+             :renderer (init-renderer canvas width height))
+      (game-loop state)
+      (render-loop state))))
