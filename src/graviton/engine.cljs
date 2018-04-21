@@ -11,13 +11,15 @@
     (.set (.-anchor sprite) 0.5)
     sprite))
 
-(defn move-sprite [{:keys [sprite x y velocity]}]
+(defn set-sprite-position [{:keys [sprite x y velocity width height]}]
   (set! (.-x (.-position sprite)) x)
   (set! (.-y (.-position sprite)) y)
   (set! (.-rotation sprite) (:theta velocity))
-  )
+  (when width (set! (.-width sprite) width))
+  (when height (set! (.-height sprite) height)))
 
 (defn add-to-stage [stage actor]
+  (set-sprite-position actor)
   (.addChild stage (:sprite actor)))
 
 (defn remove-from-stage [stage actor]
