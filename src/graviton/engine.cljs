@@ -14,7 +14,7 @@
 (defn set-sprite-position [{:keys [sprite x y velocity width height]}]
   (set! (.-x (.-position sprite)) x)
   (set! (.-y (.-position sprite)) y)
-  (set! (.-rotation sprite) (:theta velocity))
+  (set! (.-rotation sprite) (js/Math.atan2 (:y velocity) (:x velocity)))
   (when width (set! (.-width sprite) width))
   (when height (set! (.-height sprite) height)))
 
