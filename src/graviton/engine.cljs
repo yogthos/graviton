@@ -38,9 +38,39 @@
 (defn render [renderer stage]
   (.render renderer stage))
 
-(defn render-loop [state]
+(defn gravitational-acceleration-at-point [px py actors]
+  ;; (println (map :id actors))
+  (apply merge-with +
+         (map (fn [{:keys [x y mass]}] (let [dx (- px x)
+                                             dy (- py y)
+                                             r (/ mass (+ (* dx dx) (* dy dy)))
+                                             theta (js/Math.atan (/ dy dx))]
+                                         {:x (* (if (> px x) -1 1) r (js/Math.cos theta))
+                                          :y (*  (if (> px x) -1 1) r (js/Math.sin theta))})) actors)))
+
+(defn draw-gravity-vector [graphics x y state]
+  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (:actors state))
+        ax (* 30 ax)
+        ay (* 30 ay)
+        magnitude (min 0xff (* (/ 0xff 10) (+ (* ax ax) (* ay ay))))
+        color (+ (* magnitude 0x10000) (- 0xff00 (* magnitude 0x100)))]
+    (.moveTo graphics x y)
+    (set! (.-lineColor graphics) color)
+    (set! (.-lineWidth graphics) 1)
+    (.lineTo graphics
+             (+ x ax)
+             (+ y ay))))
+
+(defn draw-vector-field [state]
+  (.clear (:vector-field state))
+  (doall (for [x (map #(* 10 %) (range 50))
+               y (map #(* 10 %) (range 50))]
+           (draw-gravity-vector (:vector-field state) x y state))))
+
+(defn render-loop [state-atom]
   ((fn frame []
-     (let [{:keys [renderer stage actors]} @state]
+     (let [{:keys [renderer stage actors vector-field] :as state} @state-atom]
+       (draw-vector-field state)
        (render renderer stage)
        (js/requestAnimationFrame frame)))))
 
@@ -61,15 +91,19 @@
     (let [canvas (r/dom-node component)
           width  (int (.-width canvas))
           height (int (.-height canvas))
+          vector-field (js/PIXI.Graphics.)
+          stage (init-stage)
           ticker (js/PIXI.ticker.Ticker.)]
       (swap! state assoc
+             :vector-field vector-field
              :canvas canvas
              :width width
              :height height
-             :stage (init-stage)
+             :stage stage
              :renderer (init-renderer canvas width height)
              :ticker ticker)
       (add-actors-to-stage state)
+      (.addChild stage vector-field)
       (init-game-loop state)
       (.start ticker)
       (render-loop state))))

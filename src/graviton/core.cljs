@@ -29,19 +29,15 @@
            :theta (+ (:theta v1) (js/Math.atan2 (* (:r v2) (js/Math.sin (- (:theta v2) (:theta v1))))
                                                 (+ (:r v1) (* (:r v2) (js/Math.cos (- (:theta v2) (:theta v1)))))))}))
 
-(defn gravitational-acceleration-at-point [px py actors]
-  ;; (println (map :id actors))
-  (apply merge-with +
-         (map (fn [{:keys [x y mass]}] (let [dx (- px x)
-                                             dy (- py y)
-                                             r (/ mass (+ (* dx dx) (* dy dy)))
-                                             theta (js/Math.atan (/ dy dx))]
-                                         {:x (* (if (> px x) -1 1) r (js/Math.cos theta))
-                                          :y (*  (if (> px x) -1 1) r (js/Math.sin theta))})) actors)))
 
 (defn move-ship [{:keys [velocity id x y] :as ship} {:keys [width height delta actors]}]
-  (let [acceleration (gravitational-acceleration-at-point x y (filterv #(not= id (:id %)) actors))
-        velocity (merge-with + acceleration velocity)]
+  (let [acceleration (engine/gravitational-acceleration-at-point x y (filterv #(not= id (:id %)) actors))
+        velocity (-> (merge-with + {:x (delta-x acceleration delta)
+                                    :y (delta-y acceleration delta)} velocity)
+                     (update :x max -10)
+                     (update :x min 10)
+                     (update :y max -10)
+                     (update :y min 10))]
     ;; (println "Acc: " acceleration "  --  Vel: " velocity)
     (-> ship
         (update :x #(mod (+ % (delta-x velocity delta)) width))
@@ -77,7 +73,14 @@
                            :y 250
                            :width 50
                            :height 50
-                           :mass 300}]}))
+                           :mass 300}
+                          {:id :attractor-1
+                           :sprite (engine/sprite "circle.png")
+                           :x 400
+                           :y 400
+                           :width 25
+                           :height 25
+                           :mass 200}]}))
 (defn game []
   [:div
    [:h2 "Graviton"]
