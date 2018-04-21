@@ -43,7 +43,7 @@
   (apply merge-with +
          (map (fn [{:keys [x y mass]}] (let [dx (- px x)
                                              dy (- py y)
-                                             r (/ mass (+ (* dx dx) (* dy dy)))
+                                             r (/ mass (+ (* dx dx) (* dy dy) 0.0000001))
                                              theta (js/Math.atan (/ dy dx))]
                                          {:x (* (if (> px x) -1 1) r (js/Math.cos theta))
                                           :y (*  (if (>= px x) -1 1) r (js/Math.sin theta))})) actors)))
@@ -56,8 +56,9 @@
         ax (* 50 ax)
         ay (* 50 ay)
         magnitude (+ (* ax ax) (* ay ay))
-        color-coefficient (js/Math.ceil (* 0xff (sigmoid (/ magnitude 1.5))))
-        color (+ (* (js/Math.ceil (* 0xff (sigmoid (/ magnitude 0.5)))) 0x10000) (- 0xff00 (* (js/Math.ceil (* 0xff (sigmoid (/ magnitude 20)))) 0x100)))]
+        redness 1
+        greenness 70
+        color (+ (* (js/Math.ceil (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.ceil (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))]
     (.moveTo graphics x y)
     (set! (.-lineColor graphics) color)
     (set! (.-lineWidth graphics) 2)
@@ -106,8 +107,8 @@
              :stage stage
              :renderer (init-renderer canvas width height)
              :ticker ticker)
-      (add-actors-to-stage state)
       (.addChild stage vector-field)
+      (add-actors-to-stage state)
       (init-game-loop state)
       (.start ticker)
       (render-loop state))))

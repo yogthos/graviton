@@ -20,28 +20,30 @@
 (defn delta-y [{:keys [y]} delta]
   (* delta y))
 
-(defn polar-sum [v1 v2 & vs]
-  (cond
-    (not-empty vs)
-    (polar-sum v1 (apply polar-sum v2 vs))
-    (nil? v2) v1
-    :else {:r (js/Math.sqrt (+ (:r v1) (:r v2) (* 2 (:r v1) (:r v2) (js/Math.cos (- (:theta v2) (:theta v1))))))
-           :theta (+ (:theta v1) (js/Math.atan2 (* (:r v2) (js/Math.sin (- (:theta v2) (:theta v1))))
-                                                (+ (:r v1) (* (:r v2) (js/Math.cos (- (:theta v2) (:theta v1)))))))}))
-
 
 (defn move-ship [{:keys [velocity id x y] :as ship} {:keys [width height delta actors]}]
   (let [acceleration (engine/gravitational-acceleration-at-point x y (filterv #(not= id (:id %)) actors))
         velocity (-> (merge-with + {:x (delta-x acceleration delta)
                                     :y (delta-y acceleration delta)} velocity)
+                     (update :x #(* % (if
+                                        (or (and (> 0 x) (not (pos? %)))
+                                            (and (> x width) (pos? %)))
+                                      -0.33
+                                      1)))
                      (update :x max -10)
                      (update :x min 10)
+                     (update :y #(* % (if
+                                        (or (and (> 0 y) (not (pos? %)))
+                                            (and (> y height) (pos? %)))
+                                      -0.33
+                                      1)))
                      (update :y max -10)
-                     (update :y min 10))]
+                     (update :y min 10)
+                     )]
     ;; (println "Acc: " acceleration "  --  Vel: " velocity)
     (-> ship
-        (update :x #(mod (+ % (delta-x velocity delta)) width))
-        (update :y #(mod (+ % (delta-y velocity delta)) height))
+        (update :x #(+ % (delta-x velocity delta)))
+        (update :y #(+ % (delta-y velocity delta)))
         (assoc :velocity velocity))))
 
 (defn update-actors [state]
@@ -59,28 +61,22 @@
 
 (def state (atom
                 {:update update-game-state
-                 :actors [{:id     :ship
-                           :sprite (engine/sprite "ship.gif")
-                           :velocity {:y 0
-                                      :x 2}
-                           :x      150
-                           :y      170
-                           :mass 250
-                           :update move-ship}
-                          {:id :attractor-1
-                           :sprite (engine/sprite "circle.png")
-                           :x 250
-                           :y 250
-                           :width 50
-                           :height 50
-                           :mass 300}
-                          {:id :attractor-1
-                           :sprite (engine/sprite "circle.png")
-                           :x 400
-                           :y 400
-                           :width 25
-                           :height 25
-                           :mass 200}]}))
+                 :actors (into [{:id     :ship
+                                 :sprite (engine/sprite "ship.gif")
+                                 :velocity {:y 0
+                                            :x 2}
+                                 :x      150
+                                 :y      170
+                                 :mass 20
+                                 :update move-ship}]
+                               (mapv (fn [idx x y mass]
+                                       {:id (keyword (str "attractor-" (inc idx)))
+                                        :x x
+                                        :y y
+                                        :mass mass
+                                        :width (js/Math.ceil (* 50 (engine/sigmoid (/ (- mass 20) 100))))
+                                        :height (js/Math.ceil (* 50 (engine/sigmoid (/ (- mass 20) 100))))
+                                        :sprite (engine/sprite "circle.png")}) (range 5) (repeatedly #(+ 50 (rand-int 400))) (repeatedly #(+ 50 (rand-int 400))) (repeatedly #(+ 50 (rand-int 100)))))}))
 (defn game []
   [:div
    [:h2 "Graviton"]
