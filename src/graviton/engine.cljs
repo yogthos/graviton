@@ -8,7 +8,7 @@
 
 (defn sprite [resource-name]
   (let [sprite (js/PIXI.Sprite. (load-texture resource-name))]
-    (.set (.-anchor sprite) 0.5)
+    (.set (.-anchor sprite) 0.5 0.5)
     sprite))
 
 (defn set-sprite-position [{:keys [sprite x y velocity width height]}]
@@ -68,8 +68,8 @@
 
 (defn draw-vector-field [state]
   (.clear (:vector-field state))
-  (doall (for [x (map #(* 10 %) (range 50))
-               y (map #(* 10 %) (range 50))]
+  (doall (for [x (map #(* 10 %) (range (js/Math.ceil (/ (:width state) 10))))
+               y (map #(* 10 %) (range (js/Math.ceil (/ (:height state) 10))))]
            (draw-gravity-vector (:vector-field state) x y state))))
 
 (defn render-loop [state-atom]

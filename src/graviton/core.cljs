@@ -12,7 +12,7 @@
   (r/create-class
    {:component-did-mount (engine/init-canvas state)
     #_#_:should-component-update (constantly false)
-     :render (fn [] (println "RENDER") [:canvas {:width 500 :height 500}])}))
+     :render (fn [] (println "RENDER") [:canvas {:width 600 :height 600}])}))
 
 (defn delta-x [{:keys [x]} delta]
   (* delta x))
@@ -76,7 +76,7 @@
                                         :mass mass
                                         :width (js/Math.ceil (* 50 (engine/sigmoid (/ (- mass 20) 100))))
                                         :height (js/Math.ceil (* 50 (engine/sigmoid (/ (- mass 20) 100))))
-                                        :sprite (engine/sprite "circle.png")}) (range 5) (repeatedly #(+ 50 (rand-int 400))) (repeatedly #(+ 50 (rand-int 400))) (repeatedly #(+ 50 (rand-int 100)))))}))
+                                        :sprite (engine/sprite "circle.png")}) (range 5) (repeatedly #(+ 50 (rand-int 500))) (repeatedly #(+ 50 (rand-int 500))) (repeatedly #(+ 50 (rand-int 100)))))}))
 (defn game []
   [:div
    [:h2 "Graviton"]
