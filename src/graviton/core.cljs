@@ -64,10 +64,12 @@
                  :actors (into [{:id     :ship
                                  :sprite (engine/sprite "ship.gif")
                                  :velocity {:y 0
-                                            :x 2}
+                                            :x 0}
                                  :x      150
                                  :y      170
-                                 :mass 20
+                                 :width 35
+                                 :height 45
+                                 :mass 35
                                  :update move-ship}]
                                (mapv (fn [idx x y mass]
                                        {:id (keyword (str "attractor-" (inc idx)))

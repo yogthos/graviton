@@ -52,30 +52,31 @@
   (/ v (+ 1 (js/Math.abs v))))
 
 (defn draw-gravity-vector [graphics x y state]
-  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (:actors state))
+  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
         ax (* 50 ax)
         ay (* 50 ay)
         magnitude (+ (* ax ax) (* ay ay))
         redness 1
         greenness 70
-        color (+ (* (js/Math.ceil (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.ceil (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))]
+        max-length 4
+        color (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))]
     (.moveTo graphics x y)
     (set! (.-lineColor graphics) color)
-    (set! (.-lineWidth graphics) 2)
+    (set! (.-lineWidth graphics) (* 0.75 (sigmoid (* 5 magnitude))))
     (.lineTo graphics
-             (+ x (* 3 (sigmoid ax)))
-             (+ y (* 3 (sigmoid ay))))))
+             (+ x (* max-length (sigmoid ax)))
+             (+ y (* max-length (sigmoid ay))))))
 
-(defn draw-vector-field [state]
-  (.clear (:vector-field state))
-  (doall (for [x (map #(* 10 %) (range (js/Math.ceil (/ (:width state) 10))))
-               y (map #(* 10 %) (range (js/Math.ceil (/ (:height state) 10))))]
-           (draw-gravity-vector (:vector-field state) x y state))))
+(defn draw-vector-field [state & [spacing]]
+  (let [spacing (or spacing 5)]
+    (.clear (:vector-field state))
+    (doall (for [x (map #(* spacing %) (range (js/Math.ceil (/ (:width state) spacing))))
+                 y (map #(* spacing %) (range (js/Math.ceil (/ (:height state) spacing))))]
+             (draw-gravity-vector (:vector-field state) x y state)))))
 
 (defn render-loop [state-atom]
   ((fn frame []
      (let [{:keys [renderer stage actors vector-field] :as state} @state-atom]
-       (draw-vector-field state)
        (render renderer stage)
        (js/requestAnimationFrame frame)))))
 
@@ -107,6 +108,7 @@
              :stage stage
              :renderer (init-renderer canvas width height)
              :ticker ticker)
+      (draw-vector-field @state)
       (.addChild stage vector-field)
       (add-actors-to-stage state)
       (init-game-loop state)
