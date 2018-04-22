@@ -43,25 +43,25 @@
 (defn gravitational-acceleration-at-point [px py actors]
   ;; (println (map :id actors))
   (apply merge-with +
-         (map (fn [{:keys [x y mass]}] (let [dx (- px x)
-                                             dy (- py y)
-                                             r (/ mass (+ (* dx dx) (* dy dy) 0.0000001))
+         (map (fn [{:keys [x y mass]}] (let [dx    (- px x)
+                                             dy    (- py y)
+                                             r     (/ mass (+ (* dx dx) (* dy dy) 0.0000001))
                                              theta (js/Math.atan (/ dy dx))]
                                          {:x (* (if (> px x) -1 1) r (js/Math.cos theta))
-                                          :y (*  (if (>= px x) -1 1) r (js/Math.sin theta))})) actors)))
+                                          :y (* (if (>= px x) -1 1) r (js/Math.sin theta))})) actors)))
 
 (defn sigmoid [v]
   (/ v (+ 1 (js/Math.abs v))))
 
 (defn draw-gravity-vector [graphics x y state]
   (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
-        ax (* 50 ax)
-        ay (* 50 ay)
-        magnitude (+ (* ax ax) (* ay ay))
-        redness 1
-        greenness 70
+        ax         (* 50 ax)
+        ay         (* 50 ay)
+        magnitude  (+ (* ax ax) (* ay ay))
+        redness    1
+        greenness  70
         max-length 4
-        color (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))]
+        color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))]
     (.moveTo graphics x y)
     (set! (.-lineColor graphics) color)
     (set! (.-lineWidth graphics) (* 0.75 (sigmoid (* 5 magnitude))))
@@ -85,8 +85,8 @@
 (defn add-actors-to-stage [state]
   (let [{:keys [stage actors]} @state]
     (prewalk
-     (fn [node] (when (:sprite node) (add-to-stage stage node)) node)
-     actors)))
+      (fn [node] (when (:sprite node) (add-to-stage stage node)) node)
+      actors)))
 
 (defn init-game-loop [state]
   (.add (:ticker @state)
@@ -94,27 +94,60 @@
           (swap! state
                  #((:update %) (assoc % :delta delta))))))
 
+(defn add-drag-start-event [object handler]
+  (if handler
+    (doto object
+      (.on "mousedown" handler)
+      (.on "touchstart" handler))
+    object))
+
+(defn add-drag-event [object handler]
+  (if handler
+    (doto object
+      (.on "mousemove" handler)
+      (.on "touchmove" handler))
+    object))
+
+(defn add-drag-end-event [object handler]
+  (if handler
+    (doto object
+      (.on "mouseup" handler)
+      (.on "mouseupoutside" handler)
+      (.on "touchend" handler)
+      (.on "touchendoutside" handler))
+    object))
+
+(defn drag-event [object state {:keys [on-start on-move on-end]}]
+  (-> object
+      (add-drag-start-event (when on-start (partial on-start state)))
+      (add-drag-event (when on-move (partial on-move state)))
+      (add-drag-end-event (when on-end (partial on-end state)))))
+
 (defn click-coords [stage event]
   (let [point (.getLocalPosition (.-data event) stage)]
     {:x (.-x point) :y (.-y point)}))
 
 (defn add-stage-on-click-event [state]
-  (when-let [{:keys [stage  on-click width height]} @state]
+  (let [{:keys [stage on-click on-drag width height]} @state]
     (let [background-layer (js/PIXI.Container.)
-          hit-area (js/PIXI.Rectangle. 0 0 width height)]
+          hit-area         (js/PIXI.Rectangle. 0 0 width height)]
       (set! (.-interactive background-layer) true)
+      (set! (.-buttonMode background-layer) true)
       (set! (.-hitArea background-layer) hit-area)
       (.addChild stage background-layer)
-      (set! (.-click background-layer) (partial on-click state)))))
+      (when on-drag
+        (drag-event background-layer state on-drag))
+      (when on-click
+        (set! (.-click background-layer) (partial on-click state))))))
 
 (defn init-canvas [state]
   (fn [component]
-    (let [canvas (r/dom-node component)
-          width  (int (.-width canvas))
-          height (int (.-height canvas))
+    (let [canvas       (r/dom-node component)
+          width        (int (.-width canvas))
+          height       (int (.-height canvas))
           vector-field (js/PIXI.Graphics.)
-          stage (init-stage)
-          ticker (js/PIXI.ticker.Ticker.)]
+          stage        (init-stage)
+          ticker       (js/PIXI.ticker.Ticker.)]
       (swap! state assoc
              :vector-field vector-field
              :canvas canvas
