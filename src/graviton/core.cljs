@@ -66,7 +66,6 @@
   (let [{start-x :x start-y :y} start-coords
         {end-x :x end-y :y} end-coords
         attractor (attractor/instance
-                    (str start-x start-y)
                     start-x start-y
                     (js/Math.sqrt
                       (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
@@ -77,9 +76,7 @@
            conj attractor)))
 
 (def state (atom
-             {
-              ;:on-click stage-click
-              :on-drag (stage-click-drag add-attractor)
+             {:on-drag (stage-click-drag add-attractor)
               :update  update-game-state
               :actors  [(ship/instance)]}))
 (defn game []

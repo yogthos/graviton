@@ -9,13 +9,11 @@
     (.drawCircle 0 0 radius)
     (.endFill)))
 
-(defn instance [idx x y mass]
-  (let [width  (js/Math.ceil (* 50 (engine/sigmoid (/ (- mass 20) 100))))
-        height (js/Math.ceil (* 50 (engine/sigmoid (/ (- mass 20) 100))))]
-    {:id     (keyword (str "attractor-" (inc idx)))
-     :x      x
-     :y      y
-     :mass   mass
-     :width  width
-     :height height
-     :sprite (circle 0x0000FF x y (/ width 2))}))
+(defn instance [x y radius]
+  {:id     (keyword (str "attractor-" x y))
+   :x      x
+   :y      y
+   :mass   radius
+   :width  radius
+   :height radius
+   :sprite (circle 0x0000FF x y radius)})
