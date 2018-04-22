@@ -94,6 +94,15 @@
           (swap! state
                  #((:update %) (assoc % :delta delta))))))
 
+(defn add-stage-on-click-event [state]
+  (when-let [{:keys [stage  on-click width height]} @state]
+    (let [background-layer (js/PIXI.Container.)
+          hit-area (js/PIXI.Rectangle. 0 0 width height)]
+      (set! (.-interactive background-layer) true)
+      (set! (.-hitArea background-layer) hit-area)
+      (.addChild stage background-layer)
+      (set! (.-click background-layer) on-click))))
+
 (defn init-canvas [state]
   (fn [component]
     (let [canvas (r/dom-node component)
@@ -110,6 +119,7 @@
              :stage stage
              :renderer (init-renderer canvas width height)
              :ticker ticker)
+      (add-stage-on-click-event state)
       (draw-vector-field @state)
       (.addChild stage vector-field)
       (add-actors-to-stage state)

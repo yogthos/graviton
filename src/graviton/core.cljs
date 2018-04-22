@@ -29,8 +29,13 @@
 (defn update-game-state [state]
   (assoc state :actors (update-actors state)))
 
+(defn stage-click [event]
+  (js/console.log "stage hit")
+  (js/console.log event))
+
 (def state (atom
-                {:update update-game-state
+                {:on-click stage-click
+                 :update update-game-state
                  :actors (into [(ship/instance)]
                                (mapv attractor/instance (range 5) (repeatedly #(+ 50 (rand-int 500))) (repeatedly #(+ 50 (rand-int 500))) (repeatedly #(+ 50 (rand-int 100)))))}))
 (defn game []
