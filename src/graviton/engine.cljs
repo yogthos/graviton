@@ -41,7 +41,6 @@
   (.render renderer stage))
 
 (defn gravitational-acceleration-at-point [px py actors]
-  ;; (println (map :id actors))
   (apply merge-with +
          (map (fn [{:keys [x y mass]}] (let [dx    (- px x)
                                              dy    (- py y)
@@ -53,6 +52,12 @@
 (defn sigmoid [v]
   (/ v (+ 1 (js/Math.abs v))))
 
+(defn draw-line [graphics {:keys [color width start end]}]
+  (doto graphics
+    (.lineStyle width color)
+    (.moveTo (:x start) (:y start))
+    (.lineTo (:x end) (:y end))))
+
 (defn draw-gravity-vector [graphics x y state]
   (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
         ax         (* 50 ax)
@@ -61,13 +66,9 @@
         redness    1
         greenness  70
         max-length 4
-        color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))]
-    (.moveTo graphics x y)
-    (set! (.-lineColor graphics) color)
-    (set! (.-lineWidth graphics) (* 0.75 (sigmoid (* 5 magnitude))))
-    (.lineTo graphics
-             (+ x (* max-length (sigmoid ax)))
-             (+ y (* max-length (sigmoid ay))))))
+        color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))
+        width      (* 0.75 (sigmoid (* 5 magnitude)))]
+    (draw-line graphics {:color color :width width {:x x :y y} {:x (+ x (* max-length (sigmoid ax))) :y (+ y (* max-length (sigmoid ay)))}})))
 
 (defn draw-vector-field [state & [spacing]]
   (let [spacing (or spacing 5)]
