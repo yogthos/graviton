@@ -24,6 +24,11 @@
   (set-sprite-position actor)
   (.addChild stage (:sprite actor)))
 
+(defn remove-actors-from-stage [state]
+  (let [{:keys [stage actors]} state]
+    (doseq [actor actors]
+      (.removeChild stage (:sprite actor)))))
+
 (defn remove-from-stage [stage actor]
   (.removeChild stage (:sprite actor)))
 

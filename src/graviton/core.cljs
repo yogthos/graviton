@@ -77,10 +77,22 @@
              {:on-drag (stage-click-drag add-attractor)
               :update  update-game-state
               :actors  [(ship/instance)]}))
+
+(defn restart [state]
+  (swap! state
+         (fn [state]
+           (engine/remove-actors-from-stage state)
+           (let [ship (ship/instance)]
+             (engine/add-to-stage (:stage state) ship)
+             (assoc state :actors [ship])))))
+
 (defn game []
   [:div
    [:h2 "Graviton"]
-   [canvas state]])
+   [canvas state]
+   [:button
+    {:on-click #(restart state)}
+    "restart"]])
 
 ;; -------------------------
 ;; Initialize app
