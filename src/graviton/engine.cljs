@@ -94,6 +94,10 @@
           (swap! state
                  #((:update %) (assoc % :delta delta))))))
 
+(defn click-coords [stage event]
+  (let [point (.getLocalPosition (.-data event) stage)]
+    {:x (.-x point) :y (.-y point)}))
+
 (defn add-stage-on-click-event [state]
   (when-let [{:keys [stage  on-click width height]} @state]
     (let [background-layer (js/PIXI.Container.)
@@ -101,7 +105,7 @@
       (set! (.-interactive background-layer) true)
       (set! (.-hitArea background-layer) hit-area)
       (.addChild stage background-layer)
-      (set! (.-click background-layer) on-click))))
+      (set! (.-click background-layer) (partial on-click state)))))
 
 (defn init-canvas [state]
   (fn [component]

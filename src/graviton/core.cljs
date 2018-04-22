@@ -12,9 +12,9 @@
 ;; Views
 (defn canvas [state]
   (r/create-class
-   {:component-did-mount (engine/init-canvas state)
-    #_#_:should-component-update (constantly false)
-     :render (fn [] (println "RENDER") [:canvas {:width 600 :height 600}])}))
+    {:component-did-mount (engine/init-canvas state)
+     #_#_:should-component-update (constantly false)
+     :render              (fn [] (println "RENDER") [:canvas {:width 600 :height 600}])}))
 
 (defn update-actors [state]
   (postwalk
@@ -29,15 +29,18 @@
 (defn update-game-state [state]
   (assoc state :actors (update-actors state)))
 
-(defn stage-click [event]
-  (js/console.log "stage hit")
-  (js/console.log event))
+(defn stage-click [state event]
+  (let [{:keys [x y]} (engine/click-coords (:stage @state) event)
+        attractor (attractor/instance (str x y) x y (+ 50 (rand-int 500)))]
+    (engine/add-to-stage (:stage @state) attractor)
+    (swap! state
+           update :actors
+           conj attractor)))
 
 (def state (atom
-                {:on-click stage-click
-                 :update update-game-state
-                 :actors (into [(ship/instance)]
-                               (mapv attractor/instance (range 5) (repeatedly #(+ 50 (rand-int 500))) (repeatedly #(+ 50 (rand-int 500))) (repeatedly #(+ 50 (rand-int 100)))))}))
+             {:on-click stage-click
+              :update   update-game-state
+              :actors   [(ship/instance)]}))
 (defn game []
   [:div
    [:h2 "Graviton"]
