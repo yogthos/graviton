@@ -31,7 +31,7 @@
 
 (defn stage-click [state event]
   (let [{:keys [x y]} (engine/click-coords (:stage @state) event)
-        attractor (attractor/instance (str x y) x y (+ 50 (rand-int 500)))]
+        attractor (attractor/instance x y (+ 50 (rand-int 500)))]
     (engine/add-to-stage (:stage @state) attractor)
     (swap! state
            update :actors
@@ -60,8 +60,6 @@
                    (.removeChild (:stage @state) (:line @drag-state))
                    (reset! drag-state {})))}))
 
-;;TODO should create the attractor on start of drag
-;;add it to the stage, and grow it interactively as the drag event happens
 (defn add-attractor [state start-coords end-coords]
   (let [{start-x :x start-y :y} start-coords
         {end-x :x end-y :y} end-coords
