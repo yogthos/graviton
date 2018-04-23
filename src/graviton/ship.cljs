@@ -37,6 +37,7 @@
 (defn instance []
   {:id       :ship
    :graphics (engine/sprite "ship.gif")
+   :z-index  1
    :velocity {:y 0
               :x 0}
    :x        150

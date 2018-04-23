@@ -21,12 +21,15 @@
   (when height (set! (.-height graphics) height))
   entity)
 
-(defn add-actor-to-stage [stage actor]
+(defn add-actor-to-stage [stage {:keys [graphics z-index] :as actor}]
+  (set! (.-zOrder graphics) (or z-index 0))
   (set-graphics-position actor)
-  (.addChild stage (:graphics actor)))
+  (.addChild stage graphics)
+  (-> (.-children stage)
+      (.sort (fn [a b] (< (.-zOrder b) (.-zOrder a))))))
 
-(defn add-object-to-stage [stage actor]
-  (.addChild stage (:graphics actor)))
+(defn add-object-to-stage [stage {:keys [graphics]}]
+  (.addChild stage graphics))
 
 (defn remove-actors-from-stage [state]
   (let [{:keys [stage actors]} state]
@@ -74,11 +77,15 @@
       (fn [node] (when (:graphics node) (add-actor-to-stage stage node)) node)
       actors)))
 
-(defn init-game-loop [state]
+(defn add-background-to-stage [state]
   (doseq [{:keys [init] :as object} (:background @state)]
-    (init object @state))
+    (init object @state)))
+
+(defn add-foreground-to-stage [state]
   (doseq [{:keys [init] :as object} (:foreground @state)]
-    (init object @state))
+    (init object @state)))
+
+(defn init-game-loop [state]
   (.add (:ticker @state)
         (fn [delta]
           (swap! state
@@ -145,7 +152,9 @@
              :renderer (init-renderer canvas width height)
              :ticker ticker)
       (add-stage-on-click-event state)
+      (add-background-to-stage state)
       (add-actors-to-stage state)
+      (add-foreground-to-stage state)
       (init-game-loop state)
       (.start ticker)
       (render-loop state))))
