@@ -55,10 +55,10 @@
     (.moveTo (:x start) (:y start))
     (.lineTo (:x end) (:y end))))
 
-(defn draw-circle [graphics {:keys [color x y radius style]}]
+(defn draw-circle [graphics {:keys [line-color fill-color x y radius line-thickness]}]
   (doto graphics
-    (.lineStyle (or style 0))
-    (.beginFill color)
+    (.lineStyle (or line-thickness 10) (or line-color 0xffffff))
+    (.beginFill (or fill-color 0x000000))
     (.drawCircle x y radius)
     (.endFill)))
 

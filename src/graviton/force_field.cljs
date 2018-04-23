@@ -8,16 +8,17 @@
 
 (defn draw-gravity-vector [graphics x y state]
   (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
-        ax         (* 50 ax)
-        ay         (* 50 ay)
+        ax         (* 500 ax)
+        ay         (* 500 ay)
         magnitude  (+ (* ax ax) (* ay ay))
         redness    1
         greenness  70
-        max-length 4
+        max-length 6
         color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000)
                       (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))
         width      (* 0.75 (sigmoid (* 5 magnitude)))]
 
+    ;; Change max-length truncation to preserve direction
     (engine/draw-line graphics {:color color
                                   :width width
                                   :start {:x x
@@ -26,7 +27,7 @@
                                           :y (+ y (* max-length (sigmoid ay)))}})))
 
 (defn draw-vector-field [vector-field state & [spacing]]
-  (let [spacing  (or spacing 20)
+  (let [spacing  (or spacing 5)
         graphics (:graphics vector-field)]
     (.clear graphics)
     (doseq [x (map #(* spacing %) (range (js/Math.ceil (/ (:width state) spacing))))
