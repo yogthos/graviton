@@ -109,9 +109,9 @@
 
 (defn drag-event [object state {:keys [on-start on-move on-end]}]
   (-> object
-      (add-drag-start-event (when on-start (partial on-start state)))
-      (add-drag-event (when on-move (partial on-move state)))
-      (add-drag-end-event (when on-end (partial on-end state)))))
+      (add-drag-start-event (when on-start (partial on-start @state)))
+      (add-drag-event (when on-move (partial on-move @state)))
+      (add-drag-end-event (when on-end (fn [event] (swap! state on-end event))))))
 
 (defn click-coords [stage event]
   (let [point (.getLocalPosition (.-data event) stage)]

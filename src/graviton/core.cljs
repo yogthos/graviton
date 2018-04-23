@@ -40,12 +40,12 @@
 (defn stage-click-drag [action]
   (let [drag-state (atom {})]
     {:on-start (fn [state event]
-                 (let [{:keys [x y] :as point} (engine/click-coords (:stage @state) event)]
+                 (let [{:keys [x y] :as point} (engine/click-coords (:stage state) event)]
                    (swap! drag-state assoc
                           :start point
                           :line (let [line (js/PIXI.Graphics.)]
                                   (engine/draw-line line {:color 255 :width 10 :start point :end point})
-                                  (.addChild (:stage @state) line)
+                                  (.addChild (:stage state) line)
                                   line))))
      :on-move  (fn [state event]
                  (when-let [line (:line @drag-state)]
@@ -53,12 +53,12 @@
                    (engine/draw-line line {:color 0xFF0000
                                            :width 1
                                            :start (:start @drag-state)
-                                           :end   (engine/click-coords (:stage @state) event)})))
+                                           :end   (engine/click-coords (:stage state) event)})))
      :on-end   (fn [state event]
                  (when-let [start-coords (:start @drag-state)]
-                   (action state start-coords (engine/click-coords (:stage @state) event))
-                   (.removeChild (:stage @state) (:line @drag-state))
-                   (reset! drag-state {})))}))
+                   (.removeChild (:stage state) (:line @drag-state))
+                   (reset! drag-state {})
+                   (action state start-coords (engine/click-coords (:stage state) event))))}))
 
 (defn add-attractor [state start-coords end-coords]
   (let [{start-x :x start-y :y} start-coords
@@ -68,9 +68,10 @@
                     (js/Math.sqrt
                       (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
                          (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))]
-    (engine/add-actor-to-stage (:stage @state) attractor)
-    (let [state (swap! state update :actors conj attractor)]
-      (update-scene-objects state))))
+    (engine/add-actor-to-stage (:stage state) attractor)
+    (let [state (update state :actors conj attractor)]
+      (update-scene-objects state)
+      state)))
 
 (def state (atom
              {:on-drag (stage-click-drag add-attractor)
