@@ -2,8 +2,9 @@
   (:require
     [graviton.attractor :as attractor]
     [graviton.engine :as engine]
+    [graviton.force-field :as force-field]
     [graviton.ship :as ship]
-    [clojure.walk :refer [prewalk postwalk]]
+    [clojure.walk :refer [postwalk]]
     [reagent.core :as r]))
 
 ;assets https://itch.io/game-assets/free/tag-2d
@@ -12,9 +13,12 @@
 ;; Views
 (defn canvas [state]
   (r/create-class
-    {:component-did-mount (engine/init-canvas state)
-     #_#_:should-component-update (constantly false)
-     :render              (fn [] (println "RENDER") [:canvas {:width 600 :height 600}])}))
+    {:component-did-mount
+     (engine/init-canvas state)
+     #_#_:should-component-update
+         (constantly false)
+     :render
+     (fn [] (println "RENDER") [:canvas {:width 900 :height 600}])}))
 
 (defn update-actors [state]
   (postwalk
@@ -26,16 +30,13 @@
         node))
     (:actors state)))
 
-(defn update-game-state [state]
-  (assoc state :actors (update-actors state)))
+(defn update-objects [state]
+  (doseq [{:keys [update] :as object} (:objects state)]
+    (update object state)))
 
-(defn stage-click [state event]
-  (let [{:keys [x y]} (engine/click-coords (:stage @state) event)
-        attractor (attractor/instance x y (+ 50 (rand-int 500)))]
-    (engine/add-to-stage (:stage @state) attractor)
-    (swap! state
-           update :actors
-           conj attractor)))
+(defn update-game-state [state]
+  (update-objects state)
+  (assoc state :actors (update-actors state)))
 
 (defn stage-click-drag [action]
   (let [drag-state (atom {})]
@@ -69,13 +70,14 @@
                       (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
                          (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))]
     (engine/add-to-stage (:stage @state) attractor)
-    (swap! state
-           update :actors
-           conj attractor)))
+    (let [state (swap! state update :actors conj attractor)]
+      (doseq [{:keys [update] :as object} (:objects state)]
+        (update object state)))))
 
 (def state (atom
              {:on-drag (stage-click-drag add-attractor)
               :update  update-game-state
+              :objects [(force-field/instance)]
               :actors  [(ship/instance)]}))
 
 (defn restart [state]

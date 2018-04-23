@@ -2,13 +2,6 @@
   (:require
     [graviton.engine :as engine]))
 
-(defn circle [color x y radius]
-  (doto (js/PIXI.Graphics.)
-    (.lineStyle 0)
-    (.beginFill color)
-    (.drawCircle 0 0 radius)
-    (.endFill)))
-
 (defn color [radius]
   (js/PIXI.utils.rgb2hex
     (clj->js (repeat 3 (let [size (int (* 1.5 radius))] (if (< size 256) size 255))))))
@@ -20,4 +13,9 @@
    :mass   radius
    :width  radius
    :height radius
-   :sprite (circle (color radius) x y radius)})
+   :sprite (engine/draw-circle
+             (js/PIXI.Graphics.)
+             {:color  (color radius)
+              :x      0
+              :y      0
+              :radius radius})})

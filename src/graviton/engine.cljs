@@ -13,12 +13,13 @@
     (.set (.-anchor sprite) 0.5 0.5)
     sprite))
 
-(defn set-sprite-position [{:keys [sprite x y velocity width height]}]
+(defn set-sprite-position [{:keys [sprite x y velocity width height] :as entity}]
   (set! (.-x (.-position sprite)) x)
   (set! (.-y (.-position sprite)) y)
   (set! (.-rotation sprite) (js/Math.atan2 (:y velocity) (:x velocity)))
   (when width (set! (.-width sprite) width))
-  (when height (set! (.-height sprite) height)))
+  (when height (set! (.-height sprite) height))
+  entity)
 
 (defn add-to-stage [stage actor]
   (set-sprite-position actor)
@@ -35,27 +36,11 @@
 (defn init-stage []
   (js/PIXI.Container.))
 
-(defn canvas-coords [canvas]
-  [(int (.-width canvas))
-   (int (.-height canvas))])
-
 (defn init-renderer [canvas width height]
   (js/PIXI.autoDetectRenderer width height (clj->js {:view canvas})))
 
 (defn render [renderer stage]
   (.render renderer stage))
-
-(defn gravitational-acceleration-at-point [px py actors]
-  (apply merge-with +
-         (map (fn [{:keys [x y mass]}] (let [dx    (- px x)
-                                             dy    (- py y)
-                                             r     (/ mass (+ (* dx dx) (* dy dy) 0.0000001))
-                                             theta (js/Math.atan (/ dy dx))]
-                                         {:x (* (if (> px x) -1 1) r (js/Math.cos theta))
-                                          :y (* (if (>= px x) -1 1) r (js/Math.sin theta))})) actors)))
-
-(defn sigmoid [v]
-  (/ v (+ 1 (js/Math.abs v))))
 
 (defn draw-line [graphics {:keys [color width start end]}]
   (doto graphics
@@ -63,28 +48,16 @@
     (.moveTo (:x start) (:y start))
     (.lineTo (:x end) (:y end))))
 
-(defn draw-gravity-vector [graphics x y state]
-  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
-        ax         (* 50 ax)
-        ay         (* 50 ay)
-        magnitude  (+ (* ax ax) (* ay ay))
-        redness    1
-        greenness  70
-        max-length 4
-        color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000) (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))
-        width      (* 0.75 (sigmoid (* 5 magnitude)))]
-    (draw-line graphics {:color color :width width {:x x :y y} {:x (+ x (* max-length (sigmoid ax))) :y (+ y (* max-length (sigmoid ay)))}})))
-
-(defn draw-vector-field [state & [spacing]]
-  (let [spacing (or spacing 5)]
-    (.clear (:vector-field state))
-    (doall (for [x (map #(* spacing %) (range (js/Math.ceil (/ (:width state) spacing))))
-                 y (map #(* spacing %) (range (js/Math.ceil (/ (:height state) spacing))))]
-             (draw-gravity-vector (:vector-field state) x y state)))))
+(defn draw-circle [graphics {:keys [color x y radius style]}]
+  (doto graphics
+    (.lineStyle (or style 0))
+    (.beginFill color)
+    (.drawCircle x y radius)
+    (.endFill)))
 
 (defn render-loop [state-atom]
   ((fn frame []
-     (let [{:keys [renderer stage actors vector-field] :as state} @state-atom]
+     (let [{:keys [renderer stage] :as state} @state-atom]
        (render renderer stage)
        (js/requestAnimationFrame frame)))))
 
@@ -95,6 +68,8 @@
       actors)))
 
 (defn init-game-loop [state]
+  (doseq [{:keys [init] :as object} (:objects @state)]
+    (init object @state))
   (.add (:ticker @state)
         (fn [delta]
           (swap! state
@@ -148,14 +123,12 @@
 
 (defn init-canvas [state]
   (fn [component]
-    (let [canvas       (r/dom-node component)
-          width        (int (.-width canvas))
-          height       (int (.-height canvas))
-          vector-field (js/PIXI.Graphics.)
-          stage        (init-stage)
-          ticker       (js/PIXI.ticker.Ticker.)]
+    (let [canvas (r/dom-node component)
+          width  (int (.-width canvas))
+          height (int (.-height canvas))
+          stage  (init-stage)
+          ticker (js/PIXI.ticker.Ticker.)]
       (swap! state assoc
-             :vector-field vector-field
              :canvas canvas
              :width width
              :height height
@@ -163,8 +136,6 @@
              :renderer (init-renderer canvas width height)
              :ticker ticker)
       (add-stage-on-click-event state)
-      (draw-vector-field @state)
-      (.addChild stage vector-field)
       (add-actors-to-stage state)
       (init-game-loop state)
       (.start ticker)

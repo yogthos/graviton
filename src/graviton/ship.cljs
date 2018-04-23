@@ -1,6 +1,7 @@
 (ns graviton.ship
   (:require
-    [graviton.engine :as engine]))
+    [graviton.engine :as engine]
+    [graviton.physics :refer [gravitational-acceleration-at-point]]))
 
 (defn delta-x [{:keys [x]} delta]
   (* delta x))
@@ -9,7 +10,7 @@
   (* delta y))
 
 (defn move-ship [{:keys [velocity id x y] :as ship} {:keys [width height delta actors]}]
-  (let [acceleration (engine/gravitational-acceleration-at-point x y (filterv #(not= id (:id %)) actors))
+  (let [acceleration (gravitational-acceleration-at-point x y (filterv #(not= id (:id %)) actors))
         velocity (-> (merge-with + {:x (delta-x acceleration delta)
                                     :y (delta-y acceleration delta)} velocity)
                      (update :x #(* % (if
