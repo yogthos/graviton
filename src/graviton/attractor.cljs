@@ -9,7 +9,7 @@
   {:id       (keyword (str "attractor-" x y))
    :x        x
    :y        y
-   :mass     radius
+   :mass     (/ (* radius radius) 25)
    :width    radius
    :height   radius
    :graphics (engine/draw-circle

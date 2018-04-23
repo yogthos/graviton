@@ -8,12 +8,13 @@
 
 (defn draw-gravity-vector [graphics x y state]
   (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
-        ax         (* 500 ax)
-        ay         (* 500 ay)
+        ax         (* 100 ax)
+        ay         (* 100 ay)
         magnitude  (+ (* ax ax) (* ay ay))
+        theta (js/Math.atan2 ax ay)
         redness    1
         greenness  70
-        max-length 6
+        max-length 5
         color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000)
                       (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))
         width      (* 0.75 (sigmoid (* 5 magnitude)))]
@@ -23,11 +24,11 @@
                                   :width width
                                   :start {:x x
                                           :y y}
-                                  :end   {:x (+ x (* max-length (sigmoid ax)))
-                                          :y (+ y (* max-length (sigmoid ay)))}})))
+                                  :end   {:x (+ x (* max-length (js/Math.sin theta) (sigmoid magnitude)))
+                                          :y (+ y (* max-length (js/Math.cos theta) (sigmoid magnitude)))}})))
 
 (defn draw-vector-field [vector-field state & [spacing]]
-  (let [spacing  (or spacing 5)
+  (let [spacing 7
         graphics (:graphics vector-field)]
     (.clear graphics)
     (doseq [x (map #(* spacing %) (range (js/Math.ceil (/ (:width state) spacing))))
