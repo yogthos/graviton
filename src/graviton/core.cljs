@@ -23,19 +23,18 @@
 (defn update-actors [state]
   (postwalk
     (fn [node]
-      (if (and (:sprite node) (:update node))
+      (if (and (:graphics node) (:update node))
         (let [updated-node ((:update node) node state)]
-          (engine/set-sprite-position updated-node)
+          (engine/set-graphics-position updated-node)
           updated-node)
         node))
     (:actors state)))
 
-(defn update-objects [state]
-  (doseq [{:keys [update] :as object} (:objects state)]
+(defn update-scene-objects [state]
+  (doseq [{:keys [update] :as object} (into (:background state) (:foreground state))]
     (update object state)))
 
 (defn update-game-state [state]
-  (update-objects state)
   (assoc state :actors (update-actors state)))
 
 (defn stage-click-drag [action]
@@ -69,24 +68,30 @@
                     (js/Math.sqrt
                       (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
                          (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))]
-    (engine/add-to-stage (:stage @state) attractor)
+    (engine/add-actor-to-stage (:stage @state) attractor)
     (let [state (swap! state update :actors conj attractor)]
-      (doseq [{:keys [update] :as object} (:objects state)]
-        (update object state)))))
+      (update-scene-objects state))))
 
 (def state (atom
              {:on-drag (stage-click-drag add-attractor)
               :update  update-game-state
-              :objects [(force-field/instance)]
+              :background [(force-field/instance)]
+              ; menus, score, etc
+              :foreground []
               :actors  [(ship/instance)]}))
 
 (defn restart [state]
   (swap! state
          (fn [state]
            (engine/remove-actors-from-stage state)
-           (let [ship (ship/instance)]
-             (engine/add-to-stage (:stage state) ship)
-             (assoc state :actors [ship])))))
+           (engine/remove-objects-from-stage state)
+           (let [ship (ship/instance)
+                 force-field (force-field/instance)]
+             (engine/add-actor-to-stage (:stage state) ship)
+             (engine/add-object-to-stage (:stage state) force-field)
+             (assoc state :actors [ship]
+                          :background [force-field]
+                          :foreground [])))))
 
 (defn game []
   [:div

@@ -13,25 +13,32 @@
     (.set (.-anchor sprite) 0.5 0.5)
     sprite))
 
-(defn set-sprite-position [{:keys [sprite x y velocity width height] :as entity}]
-  (set! (.-x (.-position sprite)) x)
-  (set! (.-y (.-position sprite)) y)
-  (set! (.-rotation sprite) (js/Math.atan2 (:y velocity) (:x velocity)))
-  (when width (set! (.-width sprite) width))
-  (when height (set! (.-height sprite) height))
+(defn set-graphics-position [{:keys [graphics x y velocity width height] :as entity}]
+  (set! (.-x (.-position graphics)) x)
+  (set! (.-y (.-position graphics)) y)
+  (set! (.-rotation graphics) (js/Math.atan2 (:y velocity) (:x velocity)))
+  (when width (set! (.-width graphics) width))
+  (when height (set! (.-height graphics) height))
   entity)
 
-(defn add-to-stage [stage actor]
-  (set-sprite-position actor)
-  (.addChild stage (:sprite actor)))
+(defn add-actor-to-stage [stage actor]
+  (set-graphics-position actor)
+  (.addChild stage (:graphics actor)))
+
+(defn add-object-to-stage [stage actor]
+  (.addChild stage (:graphics actor)))
 
 (defn remove-actors-from-stage [state]
   (let [{:keys [stage actors]} state]
     (doseq [actor actors]
-      (.removeChild stage (:sprite actor)))))
+      (.removeChild stage (:graphics actor)))))
+
+(defn remove-objects-from-stage [state]
+  (doseq [object (into (:background state) (:foreground state))]
+    (.removeChild (:stage state) (:graphics object))))
 
 (defn remove-from-stage [stage actor]
-  (.removeChild stage (:sprite actor)))
+  (.removeChild stage (:graphics actor)))
 
 (defn init-stage []
   (js/PIXI.Container.))
@@ -64,11 +71,13 @@
 (defn add-actors-to-stage [state]
   (let [{:keys [stage actors]} @state]
     (prewalk
-      (fn [node] (when (:sprite node) (add-to-stage stage node)) node)
+      (fn [node] (when (:graphics node) (add-actor-to-stage stage node)) node)
       actors)))
 
 (defn init-game-loop [state]
-  (doseq [{:keys [init] :as object} (:objects @state)]
+  (doseq [{:keys [init] :as object} (:background @state)]
+    (init object @state))
+  (doseq [{:keys [init] :as object} (:foreground @state)]
     (init object @state))
   (.add (:ticker @state)
         (fn [delta]

@@ -11,23 +11,23 @@
 
 (defn move-ship [{:keys [velocity id x y] :as ship} {:keys [width height delta actors]}]
   (let [acceleration (gravitational-acceleration-at-point x y (filterv #(not= id (:id %)) actors))
-        velocity (-> (merge-with + {:x (delta-x acceleration delta)
-                                    :y (delta-y acceleration delta)} velocity)
-                     (update :x #(* % (if
-                                        (or (and (> 0 x) (not (pos? %)))
-                                            (and (> x width) (pos? %)))
-                                        -0.33
-                                        1)))
-                     (update :x max -10)
-                     (update :x min 10)
-                     (update :y #(* % (if
-                                        (or (and (> 0 y) (not (pos? %)))
-                                            (and (> y height) (pos? %)))
-                                        -0.33
-                                        1)))
-                     (update :y max -10)
-                     (update :y min 10)
-                     )]
+        velocity     (-> (merge-with + {:x (delta-x acceleration delta)
+                                        :y (delta-y acceleration delta)} velocity)
+                         (update :x #(* % (if
+                                            (or (and (> 0 x) (not (pos? %)))
+                                                (and (> x width) (pos? %)))
+                                            -0.33
+                                            1)))
+                         (update :x max -10)
+                         (update :x min 10)
+                         (update :y #(* % (if
+                                            (or (and (> 0 y) (not (pos? %)))
+                                                (and (> y height) (pos? %)))
+                                            -0.33
+                                            1)))
+                         (update :y max -10)
+                         (update :y min 10)
+                         )]
     ;; (println "Acc: " acceleration "  --  Vel: " velocity)
     (-> ship
         (update :x #(+ % (delta-x velocity delta)))
@@ -36,7 +36,7 @@
 
 (defn instance []
   {:id       :ship
-   :sprite   (engine/sprite "ship.gif")
+   :graphics (engine/sprite "ship.gif")
    :velocity {:y 0
               :x 0}
    :x        150
