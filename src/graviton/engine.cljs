@@ -91,7 +91,7 @@
 (defn init-game-loop [state]
   (.add (:ticker @state)
         (fn [delta]
-          (swap! state
+          (vswap! state
                  #((:update %) (assoc % :delta delta))))))
 
 (defn add-drag-start-event [object handler]
@@ -117,7 +117,7 @@
   (-> object
       (add-drag-start-event (when on-start (partial on-start @state)))
       (add-drag-event (when on-move (partial on-move @state)))
-      (add-drag-end-event (when on-end (fn [event] (swap! state #(or (on-end % event) %)))))))
+      (add-drag-end-event (when on-end (fn [event] (vswap! state #(or (on-end % event) %)))))))
 
 (defn click-coords [stage event]
   (let [point (.getLocalPosition (.-data event) stage)]
@@ -143,7 +143,7 @@
           height (int (.-height canvas))
           stage  (init-stage)
           ticker (js/PIXI.ticker.Ticker.)]
-      (swap! state assoc
+      (vswap! state assoc
              :canvas canvas
              :width width
              :height height

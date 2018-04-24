@@ -24,6 +24,7 @@
   :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
   :figwheel {:http-server-root "."
              :nrepl-port 7002
+             ;:server-port 3450
              :nrepl-middleware ["cider.piggieback/wrap-cljs-repl"]
              :css-dirs ["public/css"]}
 

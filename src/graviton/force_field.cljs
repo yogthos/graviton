@@ -27,7 +27,7 @@
                                   :end   {:x (+ x (* max-length (js/Math.sin theta) (sigmoid magnitude)))
                                           :y (+ y (* max-length (js/Math.cos theta) (sigmoid magnitude)))}})))
 
-(defn draw-vector-field [vector-field state & [spacing]]
+(defn draw-vector-field [vector-field state]
   (let [spacing 7
         graphics (:graphics vector-field)]
     (.clear graphics)

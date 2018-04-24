@@ -28,10 +28,10 @@
   (assoc state :actors (update-actors state)))
 
 (defn stage-click-drag [action]
-  (let [drag-state (atom {})]
+  (let [drag-state (volatile! {})]
     {:on-start (fn [state event]
                  (let [{:keys [x y] :as point} (engine/click-coords (:stage state) event)]
-                   (swap! drag-state assoc
+                   (vswap! drag-state assoc
                           :start point
                           :line (let [line (js/PIXI.Graphics.)]
                                   (engine/draw-line line {:color 255 :width 10 :start point :end point})
@@ -46,9 +46,8 @@
                                            :end   (engine/click-coords (:stage state) event)})))
      :on-end   (fn [state event]
                  (when-let [start-coords (:start @drag-state)]
-                   (println start-coords)
                    (.removeChild (:stage state) (:line @drag-state))
-                   (reset! drag-state {})
+                   (vreset! drag-state {})
                    (action state start-coords (engine/click-coords (:stage state) event))))}))
 
 (defn add-attractor [state start-coords end-coords]
@@ -66,43 +65,43 @@
 
 
 
-(def initial-state-map {:on-drag (stage-click-drag add-attractor)
-                        :update  update-game-state
+(def initial-state-map {:on-drag    (stage-click-drag add-attractor)
+                        :update     update-game-state
                         :background [(force-field/instance)]
-                                        ; menus, score, etc
+                        ; menus, score, etc
                         :foreground []
-                        :actors  [(ship/instance)]})
-(def state (atom
-            nil))
+                        :actors     [(ship/instance)]})
+
+(def state (volatile! nil))
 
 (declare menu)
 
 (defn init-state [state]
-  (reset! state (update initial-state-map :foreground (fnil into []) (menu state))))
+  (vreset! state (update initial-state-map :foreground (fnil into []) (menu state))))
 
 (defn destroy-pixi-objects [state]
-  (swap! state
+  (vswap! state
          (fn [state]
            (engine/remove-actors-from-stage state)
            (engine/remove-objects-from-stage state)
-           (let [ship (ship/instance)
+           (let [ship        (ship/instance)
                  force-field (force-field/instance)]
              (engine/add-actor-to-stage (:stage state) ship)
              (engine/add-object-to-stage (:stage state) force-field)
              (assoc state :actors [ship]
-                    :background [force-field]
-                    :foreground [])))))
+                          :background [force-field]
+                          :foreground [])))))
 (defn restart [state]
   #_(destroy-pixi-objects state)
   (init-state state))
 
 (defn menu [state]
-  [(ui/button {:label "start"
-               :x 100
-               :y 100
-               :width 200
-               :height 50
-               :on-click println #_(restart state)})])
+  [(ui/button {:label    "start"
+               :x        100
+               :y        100
+               :width    200
+               :height   50
+               :on-click #(println "clicked") #_(restart state)})])
 
 (defn canvas [state]
   (r/create-class
