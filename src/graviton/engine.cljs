@@ -8,15 +8,18 @@
 (defn load-texture [resource-name]
   (.fromImage (.-Texture js/PIXI) (str "assets/" resource-name)))
 
+(defn set-anchor [obj x y]
+  (.set (.-anchor obj) x y)
+  obj)
+
 (defn sprite [resource-name]
   (let [sprite (js/PIXI.Sprite. (load-texture resource-name))]
-    (.set (.-anchor sprite) 0.5 0.5)
-    sprite))
+    (set-anchor sprite 0.5 0.5)))
 
 (defn set-graphics-position [{:keys [graphics x y velocity width height] :as entity}]
   (set! (.-x (.-position graphics)) x)
   (set! (.-y (.-position graphics)) y)
-  (set! (.-rotation graphics) (js/Math.atan2 (:y velocity) (:x velocity)))
+  (when velocity (set! (.-rotation graphics) (js/Math.atan2 (:y velocity) (:x velocity))))
   (when width (set! (.-width graphics) width))
   (when height (set! (.-height graphics) height))
   entity)

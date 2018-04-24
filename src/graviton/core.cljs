@@ -4,21 +4,11 @@
     [graviton.engine :as engine]
     [graviton.force-field :as force-field]
     [graviton.ship :as ship]
+    [graviton.ui :as ui]
     [clojure.walk :refer [postwalk]]
     [reagent.core :as r]))
 
 ;assets https://itch.io/game-assets/free/tag-2d
-
-;; -------------------------
-;; Views
-(defn canvas [state]
-  (r/create-class
-    {:component-did-mount
-     (engine/init-canvas state)
-     #_#_:should-component-update
-         (constantly false)
-     :render
-     (fn [] (println "RENDER") [:canvas {:width 900 :height 600}])}))
 
 (defn update-actors [state]
   (postwalk
@@ -78,7 +68,12 @@
               :update  update-game-state
               :background [(force-field/instance)]
               ; menus, score, etc
-              :foreground []
+              :foreground [(ui/button {:label "start"
+                                       :x 100
+                                       :y 100
+                                       :width 200
+                                       :height 50
+                                       :on-click #(js/console.log "hi")})]
               :actors  [(ship/instance)]}))
 
 (defn restart [state]
@@ -94,9 +89,17 @@
                           :background [force-field]
                           :foreground [])))))
 
+(defn canvas [state]
+  (r/create-class
+    {:component-did-mount
+     (engine/init-canvas state)
+     :render
+     (fn []
+       (println "initializing")
+       [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))
+
 (defn game []
   [:div
-   [:h2 "Graviton"]
    [canvas state]
    [:button
     {:on-click #(restart state)}
