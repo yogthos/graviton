@@ -97,31 +97,27 @@
 (defn add-drag-start-event [object handler]
   (if handler
     (doto object
-      (.on "mousedown" handler)
-      (.on "touchstart" handler))
+      (.on "pointerdown" handler))
     object))
 
 (defn add-drag-event [object handler]
   (if handler
     (doto object
-      (.on "mousemove" handler)
-      (.on "touchmove" handler))
+      (.on "pointermove" handler))
     object))
 
 (defn add-drag-end-event [object handler]
   (if handler
     (doto object
-      (.on "mouseup" handler)
-      (.on "mouseupoutside" handler)
-      (.on "touchend" handler)
-      (.on "touchendoutside" handler))
+      (.on "pointerup" handler)
+      (.on "pointerupoutside" handler))
     object))
 
 (defn drag-event [object state {:keys [on-start on-move on-end]}]
   (-> object
       (add-drag-start-event (when on-start (partial on-start @state)))
       (add-drag-event (when on-move (partial on-move @state)))
-      (add-drag-end-event (when on-end (fn [event] (swap! state on-end event))))))
+      (add-drag-end-event (when on-end (fn [event] (swap! state #(or (on-end % event) %)))))))
 
 (defn click-coords [stage event]
   (let [point (.getLocalPosition (.-data event) stage)]

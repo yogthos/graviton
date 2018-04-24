@@ -46,6 +46,7 @@
                                            :end   (engine/click-coords (:stage state) event)})))
      :on-end   (fn [state event]
                  (when-let [start-coords (:start @drag-state)]
+                   (println start-coords)
                    (.removeChild (:stage state) (:line @drag-state))
                    (reset! drag-state {})
                    (action state start-coords (engine/click-coords (:stage state) event))))}))
@@ -63,20 +64,23 @@
       (update-scene-objects state)
       state)))
 
-(def state (atom
-             {:on-drag (stage-click-drag add-attractor)
-              :update  update-game-state
-              :background [(force-field/instance)]
-              ; menus, score, etc
-              :foreground [(ui/button {:label "start"
-                                       :x 100
-                                       :y 100
-                                       :width 200
-                                       :height 50
-                                       :on-click #(js/console.log "hi")})]
-              :actors  [(ship/instance)]}))
 
-(defn restart [state]
+
+(def initial-state-map {:on-drag (stage-click-drag add-attractor)
+                        :update  update-game-state
+                        :background [(force-field/instance)]
+                                        ; menus, score, etc
+                        :foreground []
+                        :actors  [(ship/instance)]})
+(def state (atom
+            nil))
+
+(declare menu)
+
+(defn init-state [state]
+  (reset! state (update initial-state-map :foreground (fnil into []) (menu state))))
+
+(defn destroy-pixi-objects [state]
   (swap! state
          (fn [state]
            (engine/remove-actors-from-stage state)
@@ -86,8 +90,19 @@
              (engine/add-actor-to-stage (:stage state) ship)
              (engine/add-object-to-stage (:stage state) force-field)
              (assoc state :actors [ship]
-                          :background [force-field]
-                          :foreground [])))))
+                    :background [force-field]
+                    :foreground [])))))
+(defn restart [state]
+  #_(destroy-pixi-objects state)
+  (init-state state))
+
+(defn menu [state]
+  [(ui/button {:label "start"
+               :x 100
+               :y 100
+               :width 200
+               :height 50
+               :on-click println #_(restart state)})])
 
 (defn canvas [state]
   (r/create-class
@@ -99,16 +114,13 @@
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))
 
 (defn game []
-  [:div
-   [canvas state]
-   [:button
-    {:on-click #(restart state)}
-    "restart"]])
+  [canvas state])
 
 ;; -------------------------
 ;; Initialize app
 
 (defn mount-root []
+  (init-state state)
   (r/render [game] (.getElementById js/document "app")))
 
 (defn init! []

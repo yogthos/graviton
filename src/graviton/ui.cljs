@@ -6,17 +6,19 @@
                                           #js {:fill       "#FF00FF"
                                                :fontSize   30
                                                :fontFamily "Arial"}))
-                   #_(engine/set-anchor 0.5 0.5))
+                   (engine/set-anchor 0.5 0.5))
         button (doto (js/PIXI.Graphics.)
-                 #_(.addChild text)
-                 (.on "pointerdown" (fn [& args] (js/alert "CLICKED!")) #_on-click)
+                 (.addChild (do
+                              (set! (.-x text) (/ width 2))
+                              (set! (.-y text) (/ height 2))
+                              text))
+                 (.on "pointerdown" on-click)
                  (.lineStyle 2 0xFF00FF 1)
                  (.beginFill 0xFF00BB 0.25)
                  (.drawRoundedRect 0 0 width height 15)
                  (.endFill))]
     (set! (.-interactive button) true)
     (set! (.-buttonMode button) true)
-    (set! (.-hitArea button) (js/PIXI.Rectangle. 0 0 width height))
     {:graphics button
      :x        x
      :y        y
