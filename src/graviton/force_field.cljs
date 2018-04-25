@@ -1,13 +1,20 @@
 (ns graviton.force-field
   (:require
     [graviton.engine :as engine]
-    [graviton.physics :refer [gravitational-acceleration-at-point]]))
+    [graviton.physics :as physics :refer [gravitational-acceleration-at-point]]))
 
 (defn sigmoid [v]
   (/ v (+ 1 (js/Math.abs v))))
 
+(defn calculate-missing-vector-fields [state spacing]
+  (swap! state update :actors #(map (fn [actor] (if (or (contains? :vector-field actor)
+                                                        (<= (:mass actor) 0)
+                                                        (= :ship (:id %)))
+                                                  actor
+                                                  (assoc actor :vector-field (physics/vector-field-for-actor state actor spacing)))) %)))
 (defn draw-gravity-vector [graphics x y state]
-  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(not= (:id %) :ship) (:actors state)))
+  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point x y (filterv #(and (not= (:id %) :ship)
+                                                                                               (< 0 (:mass %))) (:actors state)))
         ax         (* 100 ax)
         ay         (* 100 ay)
         magnitude  (+ (* ax ax) (* ay ay))
@@ -28,7 +35,7 @@
                                           :y (+ y (* max-length (js/Math.cos theta) (sigmoid magnitude)))}})))
 
 (defn draw-vector-field [vector-field state]
-  (let [spacing 7
+  (let [spacing 50
         graphics (:graphics vector-field)]
     (.clear graphics)
     (doseq [x (map #(* spacing %) (range (js/Math.ceil (/ (:width state) spacing))))
