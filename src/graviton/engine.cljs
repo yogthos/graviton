@@ -144,7 +144,7 @@
       (when on-click
         (set! (.-click background-layer) (partial on-click state))))))
 
-(defn init-canvas [state]
+(defn init-canvas [state init-fn]
   (fn [component]
     (let [canvas (r/dom-node component)
           width  (int (.-width canvas))
@@ -158,6 +158,7 @@
              :stage stage
              :renderer (init-renderer canvas width height)
              :ticker ticker)
+      (vswap! state init-fn)
       (add-stage-on-click-event state)
       (init-scene state)
       (init-render-loop state)

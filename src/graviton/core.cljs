@@ -3,6 +3,7 @@
     [graviton.attractor :as attractor]
     [graviton.engine :as engine]
     [graviton.force-field :as force-field]
+    [graviton.prizes :as prizes]
     [graviton.ship :as ship]
     [graviton.ui :as ui]
     [clojure.walk :refer [postwalk]]
@@ -90,7 +91,8 @@
   (vswap! state
           (fn [current-state]
             (-> current-state
-                (merge (select-keys initial-state-map [:game-state :background :actors :foreground])))))
+                (merge (select-keys initial-state-map [:game-state :background :actors :foreground]))
+                (prizes/random-prizes))))
   (engine/init-scene state)
   (engine/init-render-loop state))
 
@@ -100,7 +102,7 @@
 (defn canvas [state]
   (r/create-class
     {:component-did-mount
-     (engine/init-canvas state)
+       (engine/init-canvas state prizes/random-prizes)
      :render
      (fn []
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))
