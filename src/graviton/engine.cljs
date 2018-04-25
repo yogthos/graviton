@@ -24,27 +24,26 @@
   (when height (set! (.-height graphics) height))
   entity)
 
+(defn sort-by-z-index [stage]
+  (-> (.-children stage)
+      (.sort (fn [a b] (< (.-zOrder b) (.-zOrder a))))))
+
 (defn add-actor-to-stage [stage {:keys [graphics z-index] :as actor}]
   (set! (.-zOrder graphics) (or z-index 0))
   (set-graphics-position actor)
   (.addChild stage graphics)
-  (-> (.-children stage)
-      (.sort (fn [a b] (< (.-zOrder b) (.-zOrder a))))))
-
-(defn add-object-to-stage [stage {:keys [graphics]}]
-  (.addChild stage graphics))
-
-(defn remove-actors-from-stage [state]
-  (let [{:keys [stage actors]} state]
-    (doseq [actor actors]
-      (.removeChild stage (:graphics actor)))))
-
-(defn remove-objects-from-stage [state]
-  (doseq [object (into (:background state) (:foreground state))]
-    (.removeChild (:stage state) (:graphics object))))
+  (sort-by-z-index stage))
 
 (defn remove-from-stage [stage actor]
   (.removeChild stage (:graphics actor)))
+
+(defn clear-stage [{:keys [background actors foreground stage]}]
+  #_(doseq [{:keys [graphics]} (concat background actors foreground)]
+    (remove-from-stage stage graphics))
+  (.destroy stage #js
+      {:children true}
+      ;{:children true :texture true :baseTexture true}
+            ))
 
 (defn init-stage []
   (js/PIXI.Container.))
@@ -68,12 +67,6 @@
     (.drawCircle x y radius)
     (.endFill)))
 
-(defn render-loop [state-atom]
-  ((fn frame []
-     (let [{:keys [renderer stage] :as state} @state-atom]
-       (render renderer stage)
-       (js/requestAnimationFrame frame)))))
-
 (defn add-actors-to-stage [state]
   (let [{:keys [stage actors]} @state]
     (prewalk
@@ -88,11 +81,21 @@
   (doseq [{:keys [init] :as object} (:foreground @state)]
     (init object @state)))
 
-(defn init-game-loop [state]
+(defn started? [{:keys [game-state]}]
+  (= :started game-state))
+
+(defn render-loop [state-atom]
+  ((fn frame []
+     (let [{:keys [renderer stage game-state] :as state} @state-atom]
+       (when (started? state)
+         (render renderer stage))
+       (js/requestAnimationFrame frame)))))
+
+(defn init-render-loop [state]
   (.add (:ticker @state)
         (fn [delta]
-          (vswap! state
-                 #((:update %) (assoc % :delta delta))))))
+          (when (started? @state)
+            (vswap! state #((:update %) (assoc % :delta delta)))))))
 
 (defn add-drag-start-event [object handler]
   (if handler
@@ -123,6 +126,11 @@
   (let [point (.getLocalPosition (.-data event) stage)]
     {:x (.-x point) :y (.-y point)}))
 
+(defn init-scene [state]
+  (add-background-to-stage state)
+  (add-actors-to-stage state)
+  (add-foreground-to-stage state))
+
 (defn add-stage-on-click-event [state]
   (let [{:keys [stage on-click on-drag width height]} @state]
     (let [background-layer (js/PIXI.Container.)
@@ -151,9 +159,7 @@
              :renderer (init-renderer canvas width height)
              :ticker ticker)
       (add-stage-on-click-event state)
-      (add-background-to-stage state)
-      (add-actors-to-stage state)
-      (add-foreground-to-stage state)
-      (init-game-loop state)
+      (init-scene state)
+      (init-render-loop state)
       (.start ticker)
       (render-loop state))))

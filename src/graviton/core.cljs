@@ -24,19 +24,23 @@
   (doseq [{:keys [update] :as object} (into (:background state) (:foreground state))]
     (update object state)))
 
+
+
 (defn update-game-state [state]
-  (assoc state :actors (update-actors state)))
+  (when (engine/started? state)
+    (assoc state :actors (update-actors state))))
 
 (defn stage-click-drag [action]
   (let [drag-state (volatile! {})]
     {:on-start (fn [state event]
                  (let [{:keys [x y] :as point} (engine/click-coords (:stage state) event)]
-                   (vswap! drag-state assoc
-                          :start point
-                          :line (let [line (js/PIXI.Graphics.)]
-                                  (engine/draw-line line {:color 255 :width 10 :start point :end point})
-                                  (.addChild (:stage state) line)
-                                  line))))
+                   (when (engine/started? state)
+                     (vswap! drag-state assoc
+                             :start point
+                             :line (let [line (js/PIXI.Graphics.)]
+                                     (engine/draw-line line {:color 255 :width 10 :start point :end point})
+                                     (.addChild (:stage state) line)
+                                     line)))))
      :on-move  (fn [state event]
                  (when-let [line (:line @drag-state)]
                    (.clear line)
@@ -63,45 +67,35 @@
       (update-scene-objects state)
       state)))
 
+(def state (volatile! nil))
 
+(declare restart)
 
-(def initial-state-map {:on-drag    (stage-click-drag add-attractor)
+(def initial-state-map {:game-state :started
+                        :on-drag    (stage-click-drag add-attractor)
                         :update     update-game-state
                         :background [(force-field/instance)]
                         ; menus, score, etc
-                        :foreground []
+                        :foreground [(ui/button {:label    "restart"
+                                                 :x        100
+                                                 :y        100
+                                                 :width    200
+                                                 :height   50
+                                                 :on-click #(restart state)})]
                         :actors     [(ship/instance)]})
 
-(def state (volatile! nil))
-
-(declare menu)
+(defn restart [state]
+  (vswap! state assoc :game-state :stopped)
+  #_#_#_#_(engine/clear-stage @state)
+  (vswap! state
+          (fn [current-state]
+            (-> current-state
+                (merge (select-keys initial-state-map [:game-state :background :actors :foreground])))))
+  (engine/init-scene state)
+  (engine/init-render-loop state))
 
 (defn init-state [state]
-  (vreset! state (update initial-state-map :foreground (fnil into []) (menu state))))
-
-(defn destroy-pixi-objects [state]
-  (vswap! state
-         (fn [state]
-           (engine/remove-actors-from-stage state)
-           (engine/remove-objects-from-stage state)
-           (let [ship        (ship/instance)
-                 force-field (force-field/instance)]
-             (engine/add-actor-to-stage (:stage state) ship)
-             (engine/add-object-to-stage (:stage state) force-field)
-             (assoc state :actors [ship]
-                          :background [force-field]
-                          :foreground [])))))
-(defn restart [state]
-  #_(destroy-pixi-objects state)
-  (init-state state))
-
-(defn menu [state]
-  [(ui/button {:label    "start"
-               :x        100
-               :y        100
-               :width    200
-               :height   50
-               :on-click #(println "clicked") #_(restart state)})])
+  (vreset! state initial-state-map))
 
 (defn canvas [state]
   (r/create-class
@@ -109,7 +103,6 @@
      (engine/init-canvas state)
      :render
      (fn []
-       (println "initializing")
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))
 
 (defn game []
