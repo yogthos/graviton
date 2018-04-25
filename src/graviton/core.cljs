@@ -86,7 +86,7 @@
 
 (defn restart [state]
   (vswap! state assoc :game-state :stopped)
-  #_#_#_#_(engine/clear-stage @state)
+  (engine/clear-stage @state)
   (vswap! state
           (fn [current-state]
             (-> current-state

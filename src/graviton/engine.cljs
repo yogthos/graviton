@@ -38,9 +38,9 @@
   (.removeChild stage (:graphics actor)))
 
 (defn clear-stage [{:keys [background actors foreground stage]}]
-  #_(doseq [{:keys [graphics]} (concat background actors foreground)]
-    (remove-from-stage stage graphics))
-  (.destroy stage #js
+  (doseq [object (concat background actors foreground)]
+    (remove-from-stage stage object))
+  #_(.destroy stage #js
       {:children true}
       ;{:children true :texture true :baseTexture true}
             ))
