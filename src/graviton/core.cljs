@@ -97,6 +97,7 @@
   (vswap! state
           (fn [current-state]
             (-> current-state
+                (dissoc :vector-field)
                 (merge (select-keys initial-state-map [:game-state :background :actors :foreground]))
                 (prizes/random-prizes))))
   (engine/init-scene state)
