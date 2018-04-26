@@ -58,13 +58,18 @@
 (defn add-attractor [state start-coords end-coords]
   (let [{start-x :x start-y :y} start-coords
         {end-x :x end-y :y} end-coords
-        attractor (attractor/instance
+        attractor (attractor/instance state
                     start-x start-y
                     (js/Math.sqrt
                       (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
-                         (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))]
+                         (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))
+        vector-field (:vector-field attractor)
+        attractor (dissoc attractor :vector-field)]
     (engine/add-actor-to-stage (:stage state) attractor)
-    (let [state (update state :actors conj attractor)]
+    (let [state (-> state
+                    (update :actors conj attractor)
+                    (update :vector-field #(merge-with (partial merge-with +) % vector-field)))]
+      (force-field/draw-vector-field (some #(when (= (:id %) "force-field") %) (:background state)) state)
       (update-scene-objects state)
       state)))
 
@@ -73,6 +78,7 @@
 (declare restart)
 
 (def initial-state-map {:game-state :started
+                        :force-radius 25
                         :on-drag    (stage-click-drag add-attractor)
                         :update     update-game-state
                         :background [(force-field/instance)]
