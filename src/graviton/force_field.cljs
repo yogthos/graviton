@@ -39,9 +39,9 @@
 (defn instance []
   {:id       "force-field"
    :graphics (js/PIXI.Graphics.)
-   :init     (fn [{:keys [graphics] :as vector-field} state]
+   :init     (fn [{:keys [graphics] :as force-field} state]
                (set! (.-width graphics) (:width state))
                (set! (.-height graphics) (:height state))
-               (.addChild (:stage state) graphics))
-   :update   (fn [vector-field state]
-               #_(draw-vector-field vector-field state))})
+               (.addChild (:stage state) graphics)
+               force-field)
+   :update   (fn [vector-field state])})

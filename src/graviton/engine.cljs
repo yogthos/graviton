@@ -28,22 +28,20 @@
   (-> (.-children stage)
       (.sort (fn [a b] (< (.-zOrder b) (.-zOrder a))))))
 
-(defn add-actor-to-stage [stage {:keys [graphics z-index] :as actor}]
-  (set! (.-zOrder graphics) (or z-index 0))
-  (set-graphics-position actor)
-  (.addChild stage graphics)
-  (sort-by-z-index stage))
+(defn add-actor-to-stage [{:keys [init] :as actor}
+                          {:keys [stage] :as state}]
+  (let [{:keys [graphics z-index] :as actor} (init actor state)]
+    (set! (.-zOrder graphics) (or z-index 0))
+    (set-graphics-position actor)
+    (.addChild stage graphics)
+    (sort-by-z-index stage)))
 
 (defn remove-from-stage [stage actor]
   (.removeChild stage (:graphics actor)))
 
 (defn clear-stage [{:keys [background actors foreground stage]}]
   (doseq [object (concat background actors foreground)]
-    (remove-from-stage stage object))
-  #_(.destroy stage #js
-      {:children true}
-      ;{:children true :texture true :baseTexture true}
-            ))
+    (remove-from-stage stage object)))
 
 (defn init-stage []
   (js/PIXI.Container.))
@@ -61,16 +59,20 @@
     (.lineTo (:x end) (:y end))))
 
 (defn draw-circle [graphics {:keys [line-color fill-color x y radius line-thickness]}]
-  (doto graphics
-    (.lineStyle (or line-thickness 10) (or line-color 0xffffff))
-    (.beginFill (or fill-color 0x000000))
-    (.drawCircle x y radius)
-    (.endFill)))
+  (when line-color
+    (.lineStyle graphics (or line-thickness 3) line-color))
+  (when fill-color
+    (.beginFill graphics fill-color)
+    (.drawCircle graphics x y radius))
+  (.endFill graphics))
 
 (defn add-actors-to-stage [state]
-  (let [{:keys [stage actors]} @state]
+  (let [{:keys [actors]} @state]
     (prewalk
-      (fn [node] (when (:graphics node) (add-actor-to-stage stage node)) node)
+      (fn [node]
+        (when (:graphics node)
+          (add-actor-to-stage node @state))
+        node)
       actors)))
 
 (defn add-background-to-stage [state]
@@ -152,12 +154,12 @@
           stage  (init-stage)
           ticker (js/PIXI.ticker.Ticker.)]
       (vswap! state assoc
-             :canvas canvas
-             :width width
-             :height height
-             :stage stage
-             :renderer (init-renderer canvas width height)
-             :ticker ticker)
+              :canvas canvas
+              :width width
+              :height height
+              :stage stage
+              :renderer (init-renderer canvas width height)
+              :ticker ticker)
       (vswap! state init-fn)
       (add-stage-on-click-event state)
       (init-scene state)

@@ -65,7 +65,7 @@
                          (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))
         vector-field (:vector-field attractor)
         attractor (dissoc attractor :vector-field)]
-    (engine/add-actor-to-stage (:stage state) attractor)
+    (engine/add-actor-to-stage attractor state)
     (let [state (-> state
                     (update :actors conj attractor)
                     (update :vector-field #(merge-with (partial merge-with +) % vector-field)))]

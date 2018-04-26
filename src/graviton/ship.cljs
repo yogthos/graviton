@@ -9,7 +9,7 @@
 (defn delta-y [{:keys [y]} delta]
   (* delta y))
 
-(defn move-ship [{:keys [velocity id x y] :as ship} {:keys [vector-field force-radius width height delta actors]}]
+(defn move-ship [{:keys [velocity x y] :as ship} {:keys [vector-field force-radius width height delta]}]
   (let [{ax :x
          ay :y
          :as acceleration} (gravitational-acceleration-at-point force-radius x y vector-field)
@@ -43,9 +43,10 @@
    :z-index  1
    :velocity {:y 0
               :x 0}
-   :x        150
-   :y        170
    :width    35
    :height   45
    :mass     35
+   :init     (fn [ship state]
+               (assoc ship :x (/ (:width state) 2)
+                           :y (/ (:height state) 2)))
    :update   move-ship})
