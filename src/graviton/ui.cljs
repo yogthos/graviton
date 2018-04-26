@@ -24,7 +24,8 @@
      :y        y
      :init     (fn [{:keys [graphics] :as button} state]
                  (engine/set-graphics-position button)
-                 (.addChild (:stage state) graphics))
+                 (.addChild (:stage state) graphics)
+                 button)
      :update   (fn [])}))
 
 (defn text-box [{:keys [text x y width height]}]
@@ -34,5 +35,6 @@
                                         :fontFamily "Arial"}))
    :init     (fn [{:keys [graphics] :as text} state]
                (engine/set-graphics-position text)
-               (.addChild (:stage state) graphics))
+               (.addChild (:stage state) graphics)
+               text)
    :update   (fn [])})

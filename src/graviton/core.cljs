@@ -58,14 +58,14 @@
 (defn add-attractor [state start-coords end-coords]
   (let [{start-x :x start-y :y} start-coords
         {end-x :x end-y :y} end-coords
-        attractor (attractor/instance state
-                    start-x start-y
-                    (js/Math.sqrt
-                      (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
-                         (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))
+        attractor    (attractor/instance state
+                                         start-x start-y
+                                         (js/Math.sqrt
+                                           (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
+                                              (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))
         vector-field (:vector-field attractor)
-        attractor (dissoc attractor :vector-field)]
-    (engine/add-actor-to-stage attractor state)
+        attractor    (dissoc attractor :vector-field)]
+    (engine/add-actor-to-stage state attractor)
     (let [state (-> state
                     (update :actors conj attractor)
                     (update :vector-field #(merge-with (partial merge-with +) % vector-field)))]
@@ -77,19 +77,20 @@
 
 (declare restart)
 
-(def initial-state-map {:game-state :started
+(def initial-state-map {:game-state   :started
+                        :vector-field nil
                         :force-radius 25
-                        :on-drag    (stage-click-drag add-attractor)
-                        :update     update-game-state
-                        :background [(force-field/instance)]
+                        :on-drag      (stage-click-drag add-attractor)
+                        :update       update-game-state
+                        :background   [(force-field/instance)]
                         ; menus, score, etc
-                        :foreground [(ui/button {:label    "restart"
-                                                 :x        100
-                                                 :y        100
-                                                 :width    200
-                                                 :height   50
-                                                 :on-click #(restart state)})]
-                        :actors     [(ship/instance)]})
+                        :foreground   [(ui/button {:label    "restart"
+                                                   :x        100
+                                                   :y        100
+                                                   :width    200
+                                                   :height   50
+                                                   :on-click #(restart state)})]
+                        :actors       [(ship/instance)]})
 
 (defn restart [state]
   (vswap! state assoc :game-state :stopped)
@@ -97,8 +98,7 @@
   (vswap! state
           (fn [current-state]
             (-> current-state
-                (dissoc :vector-field)
-                (merge (select-keys initial-state-map [:game-state :background :actors :foreground]))
+                (merge (select-keys initial-state-map [:game-state :background :actors :foreground :vector-field]))
                 (prizes/random-prizes))))
   (engine/init-scene state)
   (engine/init-render-loop state))
@@ -109,7 +109,7 @@
 (defn canvas [state]
   (r/create-class
     {:component-did-mount
-       (engine/init-canvas state prizes/random-prizes)
+     (engine/init-canvas state prizes/random-prizes)
      :render
      (fn []
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))

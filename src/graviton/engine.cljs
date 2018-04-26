@@ -28,13 +28,14 @@
   (-> (.-children stage)
       (.sort (fn [a b] (< (.-zOrder b) (.-zOrder a))))))
 
-(defn add-actor-to-stage [{:keys [init] :as actor}
-                          {:keys [stage] :as state}]
+(defn add-actor-to-stage [{:keys [stage] :as state}
+                          {:keys [init] :as actor}]
   (let [{:keys [graphics z-index] :as actor} (init actor state)]
     (set! (.-zOrder graphics) (or z-index 0))
     (set-graphics-position actor)
     (.addChild stage graphics)
-    (sort-by-z-index stage)))
+    (sort-by-z-index stage)
+    actor))
 
 (defn remove-from-stage [stage actor]
   (.removeChild stage (:graphics actor)))
@@ -67,28 +68,25 @@
   (.endFill graphics))
 
 (defn add-actors-to-stage [state]
-  (let [{:keys [actors]} @state]
-    (prewalk
-      (fn [node]
-        (when (:graphics node)
-          (add-actor-to-stage node @state))
-        node)
-      actors)))
+  (vswap! state update :actors #(map (partial add-actor-to-stage @state) %)))
+
+(defn add-objects-to-stage [state type]
+  (vswap! state update type #(mapv (fn [{:keys [init] :as object}]
+                                     (init object @state))
+                                   %)))
 
 (defn add-background-to-stage [state]
-  (doseq [{:keys [init] :as object} (:background @state)]
-    (init object @state)))
+  (add-objects-to-stage state :background))
 
 (defn add-foreground-to-stage [state]
-  (doseq [{:keys [init] :as object} (:foreground @state)]
-    (init object @state)))
+  (add-objects-to-stage state :foreground))
 
 (defn started? [{:keys [game-state]}]
   (= :started game-state))
 
 (defn render-loop [state-atom]
   ((fn frame []
-     (let [{:keys [renderer stage game-state] :as state} @state-atom]
+     (let [{:keys [renderer stage] :as state} @state-atom]
        (when (started? state)
          (render renderer stage))
        (js/requestAnimationFrame frame)))))

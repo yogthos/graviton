@@ -41,8 +41,7 @@
   {:id       :ship
    :graphics (engine/sprite "ship.gif")
    :z-index  1
-   :velocity {:y 0
-              :x 0}
+   :velocity {:y 0 :x 0}
    :width    35
    :height   45
    :mass     35
