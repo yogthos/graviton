@@ -7,7 +7,8 @@
     [graviton.ship :as ship]
     [graviton.ui :as ui]
     [clojure.walk :refer [postwalk]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [cljsjs.pixi]))
 
 ;assets https://itch.io/game-assets/free/tag-2d
 

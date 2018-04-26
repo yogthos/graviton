@@ -8,6 +8,7 @@
                  [org.clojure/clojurescript "1.10.238"]
                  [re-frame "0.10.5"]
                  [reagent "0.8.0"]
+                 [cljsjs/pixi "4.7.0-0"]
                  [javax.xml.bind/jaxb-api "2.3.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
