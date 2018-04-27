@@ -1,6 +1,7 @@
 (ns graviton.core
   (:require
     [graviton.attractor :as attractor]
+    [graviton.deathzone :as deathzone]
     [graviton.engine :as engine]
     [graviton.force-field :as force-field]
     [graviton.prizes :as prizes]
@@ -14,24 +15,32 @@
 ;assets https://itch.io/game-assets/free/tag-2d
 
 (defn update-actors [state]
-  (postwalk
-    (fn [node]
-      (if (and (:graphics node) (:update node))
-        (let [updated-node ((:update node) node state)]
-          (engine/set-graphics-position updated-node)
-          updated-node)
-        node))
-    (:actors state)))
+  (update
+    state
+    :actors
+    (fn [actors]
+      (postwalk
+        (fn [node]
+          (if (and (:graphics node) (:update node))
+            (let [updated-node ((:update node) node state)]
+              (engine/set-graphics-position updated-node)
+              updated-node)
+            node))
+        actors))))
 
 (defn update-scene-objects [state]
   (doseq [{:keys [update] :as object} (into (:background state) (:foreground state))]
     (update object state)))
 
-
+(defn add-deathzones [{:keys [actors] :as state}]
+  #_(println "attractors:" (filter #(= (:type %) :attractor) actors))
+  (if (> (count (filter #(= (:type %) :attractor) actors)) 1)
+    (deathzone/random-deathzone state)
+    state))
 
 (defn update-game-state [state]
   (when (engine/started? state)
-    (assoc state :actors (update-actors state))))
+    (-> state (update-actors))))
 
 (defn stage-click-drag [action]
   (let [drag-state (volatile! {})]
@@ -68,6 +77,7 @@
         vector-field (:vector-field attractor)
         attractor    (dissoc attractor :vector-field)]
     (engine/add-actor-to-stage state attractor)
+    (add-deathzones state)
     (let [state (-> state
                     (update :actors conj attractor)
                     (update :vector-field #(merge-with (partial merge-with +) % vector-field)))]

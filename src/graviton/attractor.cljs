@@ -28,6 +28,7 @@
   (let [radius (min 150 radius)
         mass   (/ (* radius radius) 25)]
     {:id           (keyword (str "attractor-" x y))
+     :type         :attractor
      :x            x
      :y            y
      :mass         mass
