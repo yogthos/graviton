@@ -1,4 +1,4 @@
-(defproject graviton "0.1.0"
+(defproject graviton "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -10,6 +10,7 @@
                  [reagent "0.8.0"]
                  [cljsjs/pixi "4.7.0-0"]
                  [cljsjs/pixi-sound "1.4.1-0"]
+                 [cljsjs/proton-js "3.1.2-0"]
                  [javax.xml.bind/jaxb-api "2.3.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]

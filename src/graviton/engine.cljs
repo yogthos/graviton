@@ -1,7 +1,8 @@
 (ns graviton.engine
   (:require
     [clojure.walk :refer [prewalk]]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [cljsjs.proton]))
 
 ;http://pixijs.io/examples/#/basics/basic.js
 
@@ -132,31 +133,41 @@
   (add-foreground-to-stage state))
 
 (defn add-stage-on-click-event [state]
-  (let [{:keys [stage on-click on-drag width height]} @state]
-    (let [background-layer (js/PIXI.Container.)
-          hit-area         (js/PIXI.Rectangle. 0 0 width height)]
-      (set! (.-interactive background-layer) true)
-      (set! (.-buttonMode background-layer) true)
-      (set! (.-hitArea background-layer) hit-area)
-      (.addChild stage background-layer)
-      (when on-drag
-        (drag-event background-layer state on-drag))
-      (when on-click
-        (set! (.-click background-layer) (partial on-click state))))))
+  (let [{:keys [stage on-click on-drag width height]} @state
+        background-layer (js/PIXI.Container.)
+        hit-area         (js/PIXI.Rectangle. 0 0 width height)]
+    (set! (.-interactive background-layer) true)
+    (set! (.-buttonMode background-layer) true)
+    (set! (.-hitArea background-layer) hit-area)
+    (.addChild stage background-layer)
+    (when on-drag
+      (drag-event background-layer state on-drag))
+    (when on-click
+      (set! (.-click background-layer) (partial on-click state)))))
+
+(defn init-proton [stage]
+  (let [proton   (js/Proton.)
+        renderer (js/Proton.PixiRenderer. stage)
+        pool     (.-pool renderer)]
+    (.addRenderer proton renderer)
+    proton))
 
 (defn init-canvas [state init-fn]
   (fn [component]
-    (let [canvas (r/dom-node component)
-          width  (int (.-width canvas))
-          height (int (.-height canvas))
-          stage  (init-stage)
-          ticker (js/PIXI.ticker.Ticker.)]
+    (let [canvas   (r/dom-node component)
+          width    (int (.-width canvas))
+          height   (int (.-height canvas))
+          stage    (init-stage)
+          ticker   (js/PIXI.ticker.Ticker.)
+          renderer (init-renderer canvas width height)
+          proton   (init-proton stage)]
       (vswap! state assoc
               :canvas canvas
               :width width
               :height height
               :stage stage
-              :renderer (init-renderer canvas width height)
+              :renderer renderer
+              :proton proton
               :ticker ticker)
       (vswap! state init-fn)
       (add-stage-on-click-event state)

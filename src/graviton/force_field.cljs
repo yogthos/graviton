@@ -1,7 +1,7 @@
 (ns graviton.force-field
   (:require
     [graviton.engine :as engine]
-    [graviton.physics :as physics :refer [gravitational-acceleration-at-point]]))
+    [graviton.physics :refer [gravitational-acceleration-at-point]]))
 
 (defn sigmoid [v]
   (/ v (+ 1 (js/Math.abs v))))
