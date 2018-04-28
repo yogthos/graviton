@@ -9,24 +9,25 @@
   (if (> v 255) 255 v))
 
 (defn instance [x y radius]
-  {:id     (keyword (str "prize-" x y))
-   :type   :prize
-   :x      x
-   :y      y
-   :mass   0
-   :width  radius
-   :height radius
-   :init   (fn [prize state]
-             (assoc prize
-               :graphics
+  {:id       (keyword (str "prize-" x y))
+   :type     :prize
+   :x        x
+   :y        y
+   :mass     0
+   :width    radius
+   :height   radius
+   :graphics (js/PIXI.Graphics.)
+   :init     (fn [prize state]
                (engine/draw-circle
-                 (js/PIXI.Graphics.)
+                 (:graphics prize)
                  {:fill-color     (color 0 255 (max-255 radius))
                   :line-color     (color 0 (max-255 radius) 255)
                   :line-thickness 3
                   :x              0
                   :y              0
-                  :radius         radius})))})
+                  :radius         radius})
+               prize)
+   :update   (fn [prize state] prize)})
 
 (defn random-prizes [{:keys [width height] :as state}]
   (update state

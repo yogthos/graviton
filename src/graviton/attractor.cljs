@@ -34,14 +34,14 @@
      :mass         mass
      :width        radius
      :height       radius
+     :graphics     (js/PIXI.Graphics.)
      :vector-field (vector-field-for-actor state {:x x :y y :mass mass})
      :init         (fn [attractor state]
-                     (assoc attractor
-                       :graphics
-                       (engine/draw-circle
-                         (js/PIXI.Graphics.)
-                         {:line-color     (color radius)
-                          :line-thickness 5
-                          :x              0
-                          :y              0
-                          :radius         radius})))}))
+                     (engine/draw-circle
+                       (:graphics attractor)
+                       {:line-color     (color radius)
+                        :line-thickness 5
+                        :x              0
+                        :y              0
+                        :radius         radius})
+                     attractor)}))

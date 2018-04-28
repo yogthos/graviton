@@ -41,6 +41,7 @@
   (.removeChild stage (:graphics actor)))
 
 (defn clear-stage [{:keys [background actors foreground stage]}]
+  (println "removing:" (map #(select-keys % [:id :graphics]) actors))
   (doseq [object (concat background actors foreground)]
     (remove-from-stage stage object)))
 

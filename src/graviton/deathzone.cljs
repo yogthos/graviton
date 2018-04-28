@@ -8,24 +8,24 @@
   (if (> v 255) 255 v))
 
 (defn instance [x y radius]
-  {:id     (keyword (str "deathzone-" x y))
-   :type   :deathzone
-   :x      x
-   :y      y
-   :mass   0
-   :radius radius
-   :init   (fn [deathzone state]
-             (assoc deathzone
-               :graphics
+  {:id       (keyword (str "deathzone-" x y))
+   :type     :deathzone
+   :x        x
+   :y        y
+   :mass     0
+   :radius   radius
+   :graphics (js/PIXI.Graphics.)
+   :init     (fn [deathzone state]
                (engine/draw-circle
-                 (js/PIXI.Graphics.)
+                 (:graphics deathzone)
                  {:fill-color     (color 255 0 0)
                   :line-color     (color 255 60 0)
                   :line-thickness 3
                   :x              0
                   :y              0
-                  :radius         radius})))
-   :update (fn [deathzone state])})
+                  :radius         radius})
+               deathzone)
+   :update   (fn [deathzone state] deathzone)})
 
 (defn valid-coords? [dzx dzy actors]
   (every?

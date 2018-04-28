@@ -61,6 +61,7 @@
 (def state (volatile! nil))
 
 (defn restart []
+  (println "restarting" (map :id (:actors @state)))
   (vswap! state assoc :game-state :stopped)
   (engine/clear-stage @state)
   (vswap! state
@@ -77,7 +78,7 @@
               :y        (- (/ height 2) 25)
               :width    200
               :height   50
-              :on-click #(restart)}))
+              :on-click restart}))
 
 (defn deathzone-collisions [state {pr :radius :as player} deathzones]
   (if (and deathzones (some (fn [{:keys [radius] :as zone}] (collides? player zone (+ pr radius))) deathzones))
