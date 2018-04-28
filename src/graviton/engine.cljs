@@ -59,12 +59,12 @@
     (.moveTo (:x start) (:y start))
     (.lineTo (:x end) (:y end))))
 
-(defn draw-circle [graphics {:keys [line-color fill-color x y radius line-thickness]}]
+(defn draw-circle [graphics {:keys [line-color fill-color x y radius line-thickness opacity]}]
   (when line-color
     (.lineStyle graphics (or line-thickness 3) line-color))
   (when fill-color
-    (.beginFill graphics fill-color)
-    (.drawCircle graphics x y radius))
+    (.beginFill graphics fill-color (or opacity 1))
+    (.drawCircle graphics x y radius (or opacity 1)))
   (.endFill graphics))
 
 (defn add-actors-to-stage [state]

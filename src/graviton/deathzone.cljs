@@ -19,11 +19,12 @@
                (engine/draw-circle
                  (:graphics deathzone)
                  {:fill-color     (color 255 0 0)
-                  :line-color     (color 255 60 0)
-                  :line-thickness 3
+                  :line-color     (color 230 60 0)
+                  :line-thickness 4
                   :x              0
                   :y              0
-                  :radius         radius})
+                  :opacity        0.4
+                  :radius         (* radius 1.1)})
                deathzone)
    :update   (fn [deathzone state] deathzone)})
 
@@ -45,7 +46,7 @@
 
 (defn random-deathzone [state]
   (let [[x y] (random-coords state)
-        deathzone (instance x y (+ 60 (rand-int 10)))]
+        deathzone (instance x y (+ 50 (rand-int 10)))]
     ((:init deathzone) deathzone state)
     (engine/add-actor-to-stage state deathzone)
     (update state :actors conj deathzone)))

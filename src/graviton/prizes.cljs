@@ -22,6 +22,7 @@
                  (:graphics prize)
                  {:fill-color     (color 0 255 (max-255 radius))
                   :line-color     (color 0 (max-255 radius) 255)
+                  :opacity        0.7
                   :line-thickness 3
                   :x              0
                   :y              0
@@ -33,8 +34,8 @@
   (update state
           :actors
           into
-          (for [_ (range (+ 3 (rand-int 5)))]
+          (for [_ (range 5)]
             (instance
-              (rand-int (- width 50))
-              (rand-int (- height 50))
-              (+ 10 (rand-int 10))))))
+              (rand-int (- width 100))
+              (rand-int (- height 100))
+              (+ 50 (rand-int 10))))))

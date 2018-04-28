@@ -40,7 +40,7 @@
     (.beginFill 0x3355ff 0.5)
     (.lineStyle 3 0xFF5500)
     (.moveTo 0 0)
-    (.lineTo 35 10)
+    (.lineTo 25 10)
     (.lineTo 0 20)
     (.lineTo 0 0)
     (.endFill)))
@@ -51,7 +51,7 @@
    :graphics (ship-icon)
    :z-index  1
    :velocity {:y 0 :x 0}
-   :width    35
+   :width    25
    :height   20
    :radius   10
    :mass     35
