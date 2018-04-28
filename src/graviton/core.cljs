@@ -61,7 +61,6 @@
 (def state (volatile! nil))
 
 (defn restart []
-  (println "restarting" (map :id (:actors @state)))
   (vswap! state assoc :game-state :stopped)
   (engine/clear-stage @state)
   (vswap! state
