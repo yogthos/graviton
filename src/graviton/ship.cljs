@@ -35,15 +35,25 @@
         (update :y #(+ % (delta-y velocity delta)))
         (assoc :velocity velocity))))
 
+(defn ship-icon []
+  (doto (js/PIXI.Graphics.)
+    (.beginFill 0x3355ff 0.5)
+    (.lineStyle 3 0xFF5500)
+    (.moveTo 0 0)
+    (.lineTo 35 10)
+    (.lineTo 0 20)
+    (.lineTo 0 0)
+    (.endFill)))
+
 (defn instance []
   {:id       :ship
    :type     :player
-   :graphics (engine/sprite "ship.gif")
+   :graphics (ship-icon)
    :z-index  1
    :velocity {:y 0 :x 0}
    :width    35
-   :height   45
-   :radius   12
+   :height   20
+   :radius   10
    :mass     35
    :init     (fn [ship state]
                (assoc ship :x (/ (:width state) 2)

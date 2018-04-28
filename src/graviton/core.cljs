@@ -12,8 +12,6 @@
     [cljsjs.pixi]
     [cljsjs.pixi-sound]))
 
-;assets https://itch.io/game-assets/free/tag-2d
-
 (defn update-actors [state]
   (update
     state
