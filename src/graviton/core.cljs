@@ -57,9 +57,35 @@
   #_(and (< (js/Math.abs (- (:x p1) (:x p2))) d)
          (< (js/Math.abs (- (:y p1) (:y p2))) d)))
 
+(declare initial-state-map)
+(def state (volatile! nil))
+
+(defn restart []
+  (vswap! state assoc :game-state :stopped)
+  (engine/clear-stage @state)
+  (vswap! state
+          (fn [current-state]
+            (-> current-state
+                (merge (select-keys initial-state-map [:game-state :background :actors :foreground :vector-field]))
+                (prizes/random-prizes))))
+  (engine/init-scene state)
+  (engine/init-render-loop state))
+
+(defn restart-button [{:keys [width height]}]
+  (ui/button {:label    "restart"
+              :x        (- (/ width 2) 100)
+              :y        (- (/ height 2) 25)
+              :width    200
+              :height   50
+              :on-click #(restart)}))
+
 (defn deathzone-collisions [state {pr :radius :as player} deathzones]
   (if (and deathzones (some (fn [{:keys [radius] :as zone}] (collides? player zone (+ pr radius))) deathzones))
-    (assoc state :game-state :game-over)
+    (let [button (restart-button state)]
+      (engine/add-actor-to-stage state button)
+      (-> state
+          (assoc :game-state :game-over)
+          (update :actors conj button)))
     state))
 
 (defn prize-collisions [{:keys [stage] :as state} {pr :radius :as player} prizes]
@@ -125,10 +151,6 @@
       (update-scene-objects state)
       (add-deathzones state))))
 
-(def state (volatile! nil))
-
-(declare restart)
-
 (def initial-state-map {:score        0
                         :game-state   :started
                         :vector-field nil
@@ -137,24 +159,8 @@
                         :update       update-game-state
                         :background   [(force-field/instance)]
                         ; menus, score, etc
-                        :foreground   [(ui/button {:label    "restart"
-                                                   :x        100
-                                                   :y        100
-                                                   :width    200
-                                                   :height   50
-                                                   :on-click #(restart state)})]
+                        :foreground   []
                         :actors       [(ship/instance)]})
-
-(defn restart [state]
-  (vswap! state assoc :game-state :stopped)
-  (engine/clear-stage @state)
-  (vswap! state
-          (fn [current-state]
-            (-> current-state
-                (merge (select-keys initial-state-map [:game-state :background :actors :foreground :vector-field]))
-                (prizes/random-prizes))))
-  (engine/init-scene state)
-  (engine/init-render-loop state))
 
 (defn init-state [state]
   (vreset! state initial-state-map))

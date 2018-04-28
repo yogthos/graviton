@@ -86,9 +86,8 @@
 
 (defn render-loop [state-atom]
   ((fn frame []
-     (let [{:keys [renderer stage] :as state} @state-atom]
-       (when (started? state)
-         (render renderer stage))
+     (let [{:keys [renderer stage]} @state-atom]
+       (render renderer stage)
        (js/requestAnimationFrame frame)))))
 
 (defn init-render-loop [state]
