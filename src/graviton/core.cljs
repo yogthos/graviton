@@ -53,21 +53,33 @@
   (or (< (js/Math.abs (- x1 x2)) d)
       (< (js/Math.abs (- y1 y2)) d)))
 
-(defn collisions [{:keys [actors stage] :as state}]
-  (let [{{px :x py :y pr :radius} :player
-         deathzones               :deathzones
-         prizes                   :prizes} (group-actors-by-type actors)]
-    (if (and deathzones (some (fn [{:keys [x y radius]}] (collides? px py x y (+ pr radius))) deathzones))
-      (assoc state :game-state :game-over)
-      state)
-    #_(doseq [{:keys [id x y radius] :as prize} prizes]
+(defn deathzone-collisions [state {px :x py :y pr :radius} deathzones]
+  (if (and deathzones (some (fn [{:keys [x y radius]}] (collides? px py x y (+ pr radius))) deathzones))
+    (assoc state :game-state :game-over)
+    state))
+
+(defn prize-collisions [{:keys [stage] :as state} {px :x py :y pr :radius} prizes]
+  (reduce
+    (fn [state {:keys [id x y radius] :as prize}]
       (let [d (+ pr radius)]
-        (when (or (< (js/Math.abs (- px x)) d)
+        (if (or (< (js/Math.abs (- px x)) d)
                   (< (js/Math.abs (- py y)) d))
-          (engine/remove-from-stage stage prize)
-          (-> state
-              (update :actors (fn [actors] (vec (remove #(= (:id %) id) actors))))
-              (update :score inc)))))))
+          (do
+            (engine/remove-from-stage stage prize)
+            (-> state
+                (update :actors (fn [actors] (vec (remove #(= (:id %) id) actors))))
+                (update :score inc)))
+          state)))
+    state
+    prizes))
+
+(defn collisions [{:keys [actors] :as state}]
+  (let [{player     :player
+         deathzones :deathzones
+         prizes     :prizes} (group-actors-by-type actors)]
+    (-> state
+        (deathzone-collisions player deathzones)
+        (prize-collisions player prizes))))
 
 (defn update-game-state [state]
   (when (engine/started? state)
