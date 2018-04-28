@@ -13,8 +13,6 @@
    :x      x
    :y      y
    :mass   0
-   :width  radius
-   :height radius
    :radius radius
    :init   (fn [deathzone state]
              (assoc deathzone
@@ -37,11 +35,13 @@
           (> 200 (js/Math.abs (- dzy y)))))))
 
 (defn random-coords [{:keys [width height actors] :as state}]
-  (let [x (rand-int (- width 100))
-        y (rand-int (- height 100))]
-    (if (valid-coords? x y actors)
-      [x y]
-      (recur state))))
+  [(rand-int (- width 100))
+   (rand-int (- height 100))]
+  #_(let [x (rand-int (- width 100))
+          y (rand-int (- height 100))]
+      (if (valid-coords? x y actors)
+        [x y]
+        (recur state))))
 
 (defn random-deathzone [state]
   (let [[x y] (random-coords state)

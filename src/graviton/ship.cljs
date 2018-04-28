@@ -29,9 +29,7 @@
                                             -0.33
                                             1)))
                          (update :y max -10)
-                         (update :y min 10)
-                         )]
-    ;; (println "Acc: " acceleration "  --  Vel: " velocity)
+                         (update :y min 10))]
     (-> ship
         (update :x #(+ % (delta-x velocity delta)))
         (update :y #(+ % (delta-y velocity delta)))
@@ -45,7 +43,7 @@
    :velocity {:y 0 :x 0}
    :width    35
    :height   45
-   :radius   35
+   :radius   12
    :mass     35
    :init     (fn [ship state]
                (assoc ship :x (/ (:width state) 2)

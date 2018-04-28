@@ -49,27 +49,33 @@
     {}
     actors))
 
-(defn collides? [x1 y1 x2 y2 d]
-  (and (< (js/Math.abs (- x1 x2)) d)
-       (< (js/Math.abs (- y1 y2)) d)))
+(defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
+  (js/Math.sqrt
+    (+ (js/Math.pow (js/Math.abs (- x1 x2)) 2)
+       (js/Math.pow (js/Math.abs (- y1 y2)) 2))))
 
-(defn deathzone-collisions [state {px :x py :y pr :radius} deathzones]
-  (if (and deathzones (some (fn [{:keys [x y radius]}] (collides? px py x y (+ pr radius))) deathzones))
+(defn collides? [p1 p2 d]
+  (< (distance p1 p2) d)
+  #_(and (< (js/Math.abs (- x1 x2)) d)
+         (< (js/Math.abs (- y1 y2)) d)))
+
+(defn deathzone-collisions [state {pr :radius :as player} deathzones]
+  (if (and deathzones (some (fn [{:keys [radius] :as zone}]
+                              (if (collides? player zone (+ pr radius)) (println "collision:" player zone))
+                              (collides? player zone (+ pr radius))) deathzones))
     (assoc state :game-state :game-over)
     state))
 
-(defn prize-collisions [{:keys [stage] :as state} {px :x py :y pr :radius} prizes]
+(defn prize-collisions [{:keys [stage] :as state} {pr :radius :as player} prizes]
   (reduce
-    (fn [state {:keys [id x y radius] :as prize}]
-      (let [d (+ pr radius)]
-        (if (or (< (js/Math.abs (- px x)) d)
-                (< (js/Math.abs (- py y)) d))
-          (do
-            (engine/remove-from-stage stage prize)
-            (-> state
-                (update :actors (fn [actors] (vec (remove #(= (:id %) id) actors))))
-                (update :score inc)))
-          state)))
+    (fn [state {:keys [id radius] :as prize}]
+      (if (collides? player prize (+ pr radius))
+        (do
+          (engine/remove-from-stage stage prize)
+          (-> state
+              (update :actors (fn [actors] (vec (remove #(= (:id %) id) actors))))
+              (update :score inc)))
+        state))
     state
     prizes))
 
@@ -111,14 +117,8 @@
                    (vreset! drag-state {})
                    (action state start-coords (engine/click-coords (:stage state) event))))}))
 
-(defn add-attractor [state start-coords end-coords]
-  (let [{start-x :x start-y :y} start-coords
-        {end-x :x end-y :y} end-coords
-        attractor    (attractor/instance state
-                                         start-x start-y
-                                         (js/Math.sqrt
-                                           (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
-                                              (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))
+(defn add-attractor [state {:keys [x y] :as start-coords} end-coords]
+  (let [attractor    (attractor/instance state x y (distance start-coords end-coords))
         vector-field (:vector-field attractor)
         attractor    (dissoc attractor :vector-field)]
     (engine/add-actor-to-stage state attractor)
