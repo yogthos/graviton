@@ -9,11 +9,13 @@
 
 (defn instance [x y radius]
   {:id     (keyword (str "deathzone-" x y))
+   :type   :deathzone
    :x      x
    :y      y
    :mass   0
    :width  radius
    :height radius
+   :radius radius
    :init   (fn [deathzone state]
              (assoc deathzone
                :graphics

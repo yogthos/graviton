@@ -33,14 +33,47 @@
     (update object state)))
 
 (defn add-deathzones [{:keys [actors] :as state}]
-  #_(println "attractors:" (filter #(= (:type %) :attractor) actors))
   (if (> (count (filter #(= (:type %) :attractor) actors)) 1)
     (deathzone/random-deathzone state)
     state))
 
+;;todo only run when adding/removing actors
+(defn group-actors-by-type [actors]
+  (reduce
+    (fn [entities {:keys [type] :as actor}]
+      (case type
+        :player (assoc entities :player actor)
+        :deathzone (update entities :deathzones (fnil conj []) actor)
+        :prize (update entities :prizes (fnil conj []) actor)
+        entities))
+    {}
+    actors))
+
+(defn collides? [x1 y1 x2 y2 d]
+  (or (< (js/Math.abs (- x1 x2)) d)
+      (< (js/Math.abs (- y1 y2)) d)))
+
+(defn collisions [{:keys [actors stage] :as state}]
+  (let [{{px :x py :y pr :radius} :player
+         deathzones               :deathzones
+         prizes                   :prizes} (group-actors-by-type actors)]
+    (if (and deathzones (some (fn [{:keys [x y radius]}] (collides? px py x y (+ pr radius))) deathzones))
+      (assoc state :game-state :game-over)
+      state)
+    #_(doseq [{:keys [id x y radius] :as prize} prizes]
+      (let [d (+ pr radius)]
+        (when (or (< (js/Math.abs (- px x)) d)
+                  (< (js/Math.abs (- py y)) d))
+          (engine/remove-from-stage stage prize)
+          (-> state
+              (update :actors (fn [actors] (vec (remove #(= (:id %) id) actors))))
+              (update :score inc)))))))
+
 (defn update-game-state [state]
   (when (engine/started? state)
-    (-> state (update-actors))))
+    (-> state
+        (update-actors)
+        (collisions))))
 
 (defn stage-click-drag [action]
   (let [drag-state (volatile! {})]
@@ -77,19 +110,19 @@
         vector-field (:vector-field attractor)
         attractor    (dissoc attractor :vector-field)]
     (engine/add-actor-to-stage state attractor)
-    (add-deathzones state)
     (let [state (-> state
                     (update :actors conj attractor)
                     (update :vector-field #(merge-with (partial merge-with +) % vector-field)))]
       (force-field/draw-vector-field (some #(when (= (:id %) "force-field") %) (:background state)) state)
       (update-scene-objects state)
-      state)))
+      (add-deathzones state))))
 
 (def state (volatile! nil))
 
 (declare restart)
 
-(def initial-state-map {:game-state   :started
+(def initial-state-map {:score        0
+                        :game-state   :started
                         :vector-field nil
                         :force-radius 25
                         :on-drag      (stage-click-drag add-attractor)
