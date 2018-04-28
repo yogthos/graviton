@@ -50,8 +50,8 @@
     actors))
 
 (defn collides? [x1 y1 x2 y2 d]
-  (or (< (js/Math.abs (- x1 x2)) d)
-      (< (js/Math.abs (- y1 y2)) d)))
+  (and (< (js/Math.abs (- x1 x2)) d)
+       (< (js/Math.abs (- y1 y2)) d)))
 
 (defn deathzone-collisions [state {px :x py :y pr :radius} deathzones]
   (if (and deathzones (some (fn [{:keys [x y radius]}] (collides? px py x y (+ pr radius))) deathzones))
@@ -63,7 +63,7 @@
     (fn [state {:keys [id x y radius] :as prize}]
       (let [d (+ pr radius)]
         (if (or (< (js/Math.abs (- px x)) d)
-                  (< (js/Math.abs (- py y)) d))
+                (< (js/Math.abs (- py y)) d))
           (do
             (engine/remove-from-stage stage prize)
             (-> state
@@ -79,7 +79,7 @@
          prizes     :prizes} (group-actors-by-type actors)]
     (-> state
         (deathzone-collisions player deathzones)
-        (prize-collisions player prizes))))
+        #_(prize-collisions player prizes))))
 
 (defn update-game-state [state]
   (when (engine/started? state)
