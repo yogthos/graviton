@@ -54,13 +54,11 @@
 
 (defn collides? [p1 p2 d]
   (< (distance p1 p2) d)
-  #_(and (< (js/Math.abs (- x1 x2)) d)
-         (< (js/Math.abs (- y1 y2)) d)))
+  #_(and (< (js/Math.abs (- (:x p1) (:x p2))) d)
+         (< (js/Math.abs (- (:y p1) (:y p2))) d)))
 
 (defn deathzone-collisions [state {pr :radius :as player} deathzones]
-  (if (and deathzones (some (fn [{:keys [radius] :as zone}]
-                              (if (collides? player zone (+ pr radius)) (println "collision:" player zone))
-                              (collides? player zone (+ pr radius))) deathzones))
+  (if (and deathzones (some (fn [{:keys [radius] :as zone}] (collides? player zone (+ pr radius))) deathzones))
     (assoc state :game-state :game-over)
     state))
 
