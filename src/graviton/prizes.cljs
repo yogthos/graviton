@@ -10,6 +10,7 @@
 
 (defn instance [x y radius]
   {:id     (keyword (str "prize-" x y))
+   :type   :prize
    :x      x
    :y      y
    :mass   0

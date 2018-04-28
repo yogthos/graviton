@@ -12,8 +12,6 @@
     [cljsjs.pixi]
     [cljsjs.pixi-sound]))
 
-;assets https://itch.io/game-assets/free/tag-2d
-
 (defn update-actors [state]
   (update
     state
@@ -33,14 +31,65 @@
     (update object state)))
 
 (defn add-deathzones [{:keys [actors] :as state}]
-  #_(println "attractors:" (filter #(= (:type %) :attractor) actors))
   (if (> (count (filter #(= (:type %) :attractor) actors)) 1)
     (deathzone/random-deathzone state)
     state))
 
+;;todo only run when adding/removing actors
+(defn group-actors-by-type [actors]
+  (reduce
+    (fn [entities {:keys [type] :as actor}]
+      (case type
+        :player (assoc entities :player actor)
+        :deathzone (update entities :deathzones (fnil conj []) actor)
+        :prize (update entities :prizes (fnil conj []) actor)
+        entities))
+    {}
+    actors))
+
+(defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
+  (js/Math.sqrt
+    (+ (js/Math.pow (js/Math.abs (- x1 x2)) 2)
+       (js/Math.pow (js/Math.abs (- y1 y2)) 2))))
+
+(defn collides? [p1 p2 d]
+  (< (distance p1 p2) d)
+  #_(and (< (js/Math.abs (- x1 x2)) d)
+         (< (js/Math.abs (- y1 y2)) d)))
+
+(defn deathzone-collisions [state {pr :radius :as player} deathzones]
+  (if (and deathzones (some (fn [{:keys [radius] :as zone}]
+                              (if (collides? player zone (+ pr radius)) (println "collision:" player zone))
+                              (collides? player zone (+ pr radius))) deathzones))
+    (assoc state :game-state :game-over)
+    state))
+
+(defn prize-collisions [{:keys [stage] :as state} {pr :radius :as player} prizes]
+  (reduce
+    (fn [state {:keys [id radius] :as prize}]
+      (if (collides? player prize (+ pr radius))
+        (do
+          (engine/remove-from-stage stage prize)
+          (-> state
+              (update :actors (fn [actors] (vec (remove #(= (:id %) id) actors))))
+              (update :score inc)))
+        state))
+    state
+    prizes))
+
+(defn collisions [{:keys [actors] :as state}]
+  (let [{player     :player
+         deathzones :deathzones
+         prizes     :prizes} (group-actors-by-type actors)]
+    (-> state
+        (deathzone-collisions player deathzones)
+        #_(prize-collisions player prizes))))
+
 (defn update-game-state [state]
   (when (engine/started? state)
-    (-> state (update-actors))))
+    (-> state
+        (update-actors)
+        (collisions))))
 
 (defn stage-click-drag [action]
   (let [drag-state (volatile! {})]
@@ -66,30 +115,24 @@
                    (vreset! drag-state {})
                    (action state start-coords (engine/click-coords (:stage state) event))))}))
 
-(defn add-attractor [state start-coords end-coords]
-  (let [{start-x :x start-y :y} start-coords
-        {end-x :x end-y :y} end-coords
-        attractor    (attractor/instance state
-                                         start-x start-y
-                                         (js/Math.sqrt
-                                           (+ (js/Math.pow (js/Math.abs (- start-x end-x)) 2)
-                                              (js/Math.pow (js/Math.abs (- start-y end-y)) 2))))
+(defn add-attractor [state {:keys [x y] :as start-coords} end-coords]
+  (let [attractor    (attractor/instance state x y (distance start-coords end-coords))
         vector-field (:vector-field attractor)
         attractor    (dissoc attractor :vector-field)]
     (engine/add-actor-to-stage state attractor)
-    (add-deathzones state)
     (let [state (-> state
                     (update :actors conj attractor)
                     (update :vector-field #(merge-with (partial merge-with +) % vector-field)))]
       (force-field/draw-vector-field (some #(when (= (:id %) "force-field") %) (:background state)) state)
       (update-scene-objects state)
-      state)))
+      (add-deathzones state))))
 
 (def state (volatile! nil))
 
 (declare restart)
 
-(def initial-state-map {:game-state   :started
+(def initial-state-map {:score        0
+                        :game-state   :started
                         :vector-field nil
                         :force-radius 25
                         :on-drag      (stage-click-drag add-attractor)

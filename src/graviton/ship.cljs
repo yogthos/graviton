@@ -29,21 +29,31 @@
                                             -0.33
                                             1)))
                          (update :y max -10)
-                         (update :y min 10)
-                         )]
-    ;; (println "Acc: " acceleration "  --  Vel: " velocity)
+                         (update :y min 10))]
     (-> ship
         (update :x #(+ % (delta-x velocity delta)))
         (update :y #(+ % (delta-y velocity delta)))
         (assoc :velocity velocity))))
 
+(defn ship-icon []
+  (doto (js/PIXI.Graphics.)
+    (.beginFill 0x3355ff 0.5)
+    (.lineStyle 3 0xFF5500)
+    (.moveTo 0 0)
+    (.lineTo 35 10)
+    (.lineTo 0 20)
+    (.lineTo 0 0)
+    (.endFill)))
+
 (defn instance []
   {:id       :ship
-   :graphics (engine/sprite "ship.gif")
+   :type     :player
+   :graphics (ship-icon)
    :z-index  1
    :velocity {:y 0 :x 0}
    :width    35
-   :height   45
+   :height   20
+   :radius   10
    :mass     35
    :init     (fn [ship state]
                (assoc ship :x (/ (:width state) 2)
