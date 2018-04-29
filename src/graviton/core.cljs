@@ -52,7 +52,7 @@
 
 (defn restart []
   (vswap! state assoc :game-state :stopped)
-  (.stop (:ticker @state))
+
   (engine/clear-stage @state)
   (vswap! state
           (fn [current-state]
@@ -60,7 +60,8 @@
                 (merge (select-keys (initial-state-map) [:game-state :background :actors :foreground :vector-field]))
                 (prizes/random-prizes))))
   (engine/init-scene state)
-  (engine/init-render-loop state))
+  (engine/init-render-loop state)
+  (.start (:ticker @state)))
 
 (defn final-score [{:keys [width height score]}]
   (ui/text-box {:x 20 :y 20 :text (str "Final Score: " score " prizes collected!")}))
@@ -159,13 +160,12 @@
 (defn initial-state-map []
   {:score        0
    :total-prizes 5
-   :game-state   :started
+   :game-state   :started #_:stopped
    :vector-field nil
    :force-radius 25
    :on-drag      (stage-click-drag add-attractor)
    :update       update-game-state
    :background   [(force-field/instance)]
-                                        ; menus, score, etc
    :foreground   []
    :actors       [(ship/instance state)]})
 
@@ -175,35 +175,20 @@
 (defn canvas [state]
   (r/create-class
     {:component-did-mount
-     (engine/init-canvas state prizes/random-prizes)
+     (engine/init-canvas state #(-> % #_ui/help-menu (vswap! prizes/random-prizes)))
      :render
      (fn []
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))
 
-(def game-started (r/atom false))
-
 (defn game []
   [canvas state])
+
+;; -------------------------
+;; Initialize app
 
 (defn mount-root []
   (init-state state)
   (r/render [game] (.getElementById js/document "app")))
 
-(defn intro []
-  [:div
-   [:h1 "Graviton"]
-   [:h3 "Instructions: "]
-   [:ol
-    [:li "Drag to create gravity wells that will guide your ship to the prizes"]
-    [:li "Once you're ready to launch (and have placed at least one attractor), Click and drag on your ship to blast off!"]
-    [:li "Keep placing attractors if you need to, but be careful! If you place too many, you'll create death zones that will end the game if touched!"]
-    [:li "Have fun!"]]
-   [:button {:on-click #(mount-root)} "Start Graviton!"]])
-
-;; -------------------------
-;; Initialize app
-
-
-
 (defn init! []
-  (r/render [intro] (.getElementById js/document "app")))
+  (mount-root))
