@@ -29,12 +29,13 @@
                prize)
    :update   (fn [prize state] prize)})
 
-(defn random-prizes [{:keys [width height total-prizes] :as state}]
+(defn random-prizes [{:keys [width height total-prizes actors] :as state}]
   (update state
           :actors
-          into
-          (for [_ (range total-prizes)]
-            (let [{:keys [x y r]} (engine/random-xyr width height {:min-r 10
-                                                                   :max-r 60
-                                                                   :padding 0})]
-              (instance x y r)))))
+          (fnil into [])
+          (mapv (fn [{:keys [x y radius]}]
+                  (instance x y radius))
+                (engine/random-xyrs total-prizes width height {:min-r 40
+                                                               :max-r 50
+                                                               :padding 0
+                                                               :existing actors}))))

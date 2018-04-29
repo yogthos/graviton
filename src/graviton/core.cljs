@@ -47,18 +47,6 @@
     {}
     actors))
 
-(defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
-  (if js/Math.hypot
-    (js/Math.hypot (js/Math.abs (- x1 x2)) (js/Math.abs (- y1 y2)))
-    (js/Math.sqrt
-      (+ (js/Math.pow (js/Math.abs (- x1 x2)) 2)
-         (js/Math.pow (js/Math.abs (- y1 y2)) 2)))))
-
-(defn collides? [p1 p2]
-  (< (distance p1 p2) (+ (:radius p1) (:radius p2)))
-  #_(and (< (js/Math.abs (- (:x p1) (:x p2))) d)
-         (< (js/Math.abs (- (:y p1) (:y p2))) d)))
-
 (declare initial-state-map)
 (def state (volatile! nil))
 
@@ -94,14 +82,14 @@
         (update :actors into [button score]))))
 
 (defn deathzone-collisions [state player deathzones]
-  (if (and deathzones (some (fn [zone] (collides? player zone)) deathzones))
+  (if (and deathzones (some (fn [zone] (engine/collides? player zone)) deathzones))
     (end-game-screen state)
     state))
 
 (defn find-prize-collisions [{:keys [stage] :as state} player prizes]
   (reduce
     (fn [state {:keys [id] :as prize}]
-      (if (collides? player prize)
+      (if (engine/collides? player prize)
         (do
           (engine/remove-from-stage stage prize)
           (-> state
@@ -156,7 +144,7 @@
                    (action state start-coords (engine/click-coords (:stage state) event))))}))
 
 (defn add-attractor [state {:keys [x y] :as start-coords} end-coords]
-  (let [attractor    (attractor/instance state x y (distance start-coords end-coords))
+  (let [attractor    (attractor/instance state x y (engine/distance start-coords end-coords))
         vector-field (:vector-field attractor)
         attractor    (dissoc attractor :vector-field)]
     (engine/add-actor-to-stage state attractor)

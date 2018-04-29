@@ -8,5 +8,8 @@
   (let [{ax  :x
          ay  :y
          :as acceleration} (get vector-field [(nearest-point radius px)
-                                              (nearest-point radius py)])]
-    (if (< 0.75 (+ (* ax ax) (* ay ay))) {:x -1 :y -1} acceleration)))
+                                              (nearest-point radius py)])
+        scale (if (< 1 (+ (* ax ax) (* ay ay))) (/ 1 (js/Math.hypot ax ay)) 1)]
+    (when (not= scale 1) (js/Math.hypot (* ax scale) (* ay scale)))
+    {:x (* ax scale)
+     :y (* ay scale)}))

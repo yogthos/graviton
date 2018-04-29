@@ -26,7 +26,7 @@
 
 (defn instance [state x y radius]
   (let [radius (min 150 radius)
-        mass   (/ (* radius radius) 60)]
+        mass   (/ (* radius radius) 10)]
     {:id           (keyword (str "attractor-" x y))
      :type         :attractor
      :x            x

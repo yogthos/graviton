@@ -14,10 +14,10 @@
         magnitude  (+ (* ax ax) (* ay ay))
         theta      (js/Math.atan2 ax ay)
         redness    1
-        greenness  70
+        greenness  100
         max-length 8
-        color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000)
-                      (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))
+        color      (+ (* (max 0x00 (- (js/Math.round (* 0x1cb (sigmoid (* magnitude redness)))) 0xcc)) 0x10000)
+                      (- 0xff00 (* (+ 0x00 (js/Math.round (* 0xff (sigmoid (/ magnitude greenness))))) 0x100)))
         width      (* 3 (sigmoid (* 5 magnitude)))]
 
     ;; Change max-length truncation to preserve direction

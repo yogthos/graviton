@@ -28,25 +28,11 @@
                deathzone)
    :update   (fn [deathzone state] deathzone)})
 
-(defn valid-coords? [dzx dzy actors]
-  (every?
-    true?
-    (for [{:keys [x y]} actors]
-      (or (> 200 (js/Math.abs (- dzx x)))
-          (> 200 (js/Math.abs (- dzy y)))))))
-
-(defn random-coords [{:keys [width height actors] :as state}]
-  [(rand-int (- width 100))
-   (rand-int (- height 100))]
-  #_(let [x (rand-int (- width 100))
-          y (rand-int (- height 100))]
-      (if (valid-coords? x y actors)
-        [x y]
-        (recur state))))
-
 (defn random-deathzone [state]
-  (let [[x y] (random-coords state)
-        deathzone (instance x y (+ 20 (rand-int 10)))]
+  (let [{:keys [x y radius]} (engine/random-xyr (:width state) (:height state) {:min-r 20
+                                                                                :max-r 30
+                                                                                :existing (:actors state)})
+        deathzone (instance x y radius)]
     ((:init deathzone) deathzone state)
     (engine/add-actor-to-stage state deathzone)
     (update state :actors conj deathzone)))

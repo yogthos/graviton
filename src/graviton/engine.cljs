@@ -11,10 +11,40 @@
 (defn set-anchor [obj x y]
   (.set (.-anchor obj) x y)
   obj)
+(defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
+  (if js/Math.hypot
+    (js/Math.hypot (js/Math.abs (- x1 x2)) (js/Math.abs (- y1 y2)))
+    (js/Math.sqrt
+     (+ (js/Math.pow (js/Math.abs (- x1 x2)) 2)
+        (js/Math.pow (js/Math.abs (- y1 y2)) 2)))))
 
-(defn random-xyr [width height {:keys [padding min-r max-r] :or {padding 0
-                                                                 min-r 1
-                                                                 max-r 1}}]
+(defn collides? [p1 p2]
+  (< (distance p1 p2) (+ (:radius p1) (:radius p2)))
+  #_(and (< (js/Math.abs (- (:x p1) (:x p2))) d)
+         (< (js/Math.abs (- (:y p1) (:y p2))) d)))
+
+(defn random-xyr [width height {:keys [padding min-r max-r existing retries max-retries] :or {padding 0
+                                                                                              min-r 1
+                                                                                              max-retries 50
+                                                                                              retries 0
+                                                                                              max-r 1
+                                                                                              existing []} :as opts}]
+  (when (< 1 retries) (println "Random ball collided, retrying for the" (str retries
+                                                                             (cond
+                                                                               (< 10 (mod retries 100) 14)
+                                                                               "th"
+
+                                                                               (= (mod retries 10) 1)
+                                                                               "st"
+
+                                                                               (= (mod retries 10) 2)
+                                                                               "nd"
+
+                                                                               (= (mod retries 10) 3)
+                                                                               "rd"
+
+                                                                               :else
+                                                                               "th")) "time"))
   (let [r (+ min-r (if (and max-r (< min-r max-r))
                      (rand-int (inc (- max-r min-r)))
                      0))
@@ -23,9 +53,29 @@
         net-height (- height (* 2 inset))
         x (+ inset (rand-int net-width))
         y (+ inset (rand-int net-height))]
-    {:x x
-     :y y
-     :r r}))
+    (when (or (> 0 net-width)
+              (> 0 net-height))
+      (throw (js/Error. (str "Your min-r or max-r is too large, please try a smaller radius"))))
+    (if (some
+         (fn [xyr2]
+           (collides? {:x x
+                       :y y
+                       :radius r}
+                      xyr2)) existing)
+      (let [retries (inc retries)]
+        (if (or (neg? max-retries) (< retries max-retries))
+          (recur width height (assoc opts :retries retries))
+          (throw (js/Error. (str "Failed to generate a non-colliding disk after " max-retries " retries")))))
+      {:x x
+       :y y
+       :radius r})))
+
+(defn random-xyrs [n width height opts]
+  (reduce
+   (fn [acc v]
+     (conj acc (random-xyr width height (update opts :existing (fnil into []) acc))))
+   []
+   (range n)))
 
 (defn sprite [resource-name]
   (let [sprite (js/PIXI.Sprite. (load-texture resource-name))]
