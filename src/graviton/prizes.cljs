@@ -34,7 +34,7 @@
           :actors
           into
           (for [_ (range total-prizes)]
-            (instance
-              (rand-int (- width 100))
-              (rand-int (- height 100))
-              (+ 50 (rand-int 10))))))
+            (let [{:keys [x y r]} (engine/random-xyr width height {:min-r 10
+                                                                   :max-r 60
+                                                                   :padding 0})]
+              (instance x y r)))))

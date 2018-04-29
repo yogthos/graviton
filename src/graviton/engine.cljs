@@ -12,6 +12,21 @@
   (.set (.-anchor obj) x y)
   obj)
 
+(defn random-xyr [width height {:keys [padding min-r max-r] :or {padding 0
+                                                                 min-r 1
+                                                                 max-r 1}}]
+  (let [r (+ min-r (if (and max-r (< min-r max-r))
+                     (rand-int (inc (- max-r min-r)))
+                     0))
+        inset (+ r padding)
+        net-width (- width (* 2 inset))
+        net-height (- height (* 2 inset))
+        x (+ inset (rand-int net-width))
+        y (+ inset (rand-int net-height))]
+    {:x x
+     :y y
+     :r r}))
+
 (defn sprite [resource-name]
   (let [sprite (js/PIXI.Sprite. (load-texture resource-name))]
     (set-anchor sprite 0.5 0.5)))
