@@ -56,10 +56,12 @@
   (vswap! state
           (fn [current-state]
             (-> current-state
-                (merge (select-keys initial-state-map [:game-state :background :actors :foreground :vector-field]))
+                (merge (select-keys (initial-state-map) [:game-state :background :actors :foreground :vector-field]))
                 (prizes/random-prizes))))
   (engine/init-scene state)
-  (engine/init-render-loop state))
+  (engine/init-render-loop state)
+  (vswap! state assoc :game-state :started)
+  (.start (:ticker @state)))
 
 (defn final-score [{:keys [width height score]}]
   (ui/text-box {:x 20 :y 20 :text (str "Final Score: " score " prizes collected!")}))
@@ -155,25 +157,25 @@
       (update-scene-objects state)
       (add-deathzones state))))
 
-(def initial-state-map {:score        0
-                        :total-prizes 5
-                        :game-state   :started
-                        :vector-field nil
-                        :force-radius 20
-                        :on-drag      (stage-click-drag add-attractor)
-                        :update       update-game-state
-                        :background   [(force-field/instance)]
-                        ; menus, score, etc
-                        :foreground   []
-                        :actors       [(ship/instance)]})
+(defn initial-state-map []
+  {:score        0
+   :total-prizes 5
+   :game-state   :stopped
+   :vector-field nil
+   :force-radius 20
+   :on-drag      (stage-click-drag add-attractor)
+   :update       update-game-state
+   :background   [(force-field/instance)]
+   :foreground   []
+   :actors       [(ship/instance state)]})
 
 (defn init-state [state]
-  (vreset! state initial-state-map))
+  (vreset! state (initial-state-map)))
 
 (defn canvas [state]
   (r/create-class
     {:component-did-mount
-     (engine/init-canvas state prizes/random-prizes)
+     (engine/init-canvas state ui/help-menu)
      :render
      (fn []
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))

@@ -3,14 +3,16 @@
     [clojure.walk :refer [prewalk]]
     [reagent.core :as r]))
 
-;http://pixijs.io/examples/#/basics/basic.js
-
 (defn load-texture [resource-name]
   (.fromImage (.-Texture js/PIXI) (str "assets/" resource-name)))
 
 (defn set-anchor [obj x y]
   (.set (.-anchor obj) x y)
   obj)
+
+(defn sigmoid [v]
+  (/ v (+ 1 (js/Math.abs v))))
+
 (defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
   (if js/Math.hypot
     (js/Math.hypot (js/Math.abs (- x1 x2)) (js/Math.abs (- y1 y2)))
@@ -19,32 +21,15 @@
         (js/Math.pow (js/Math.abs (- y1 y2)) 2)))))
 
 (defn collides? [p1 p2]
-  (< (distance p1 p2) (+ (:radius p1) (:radius p2)))
-  #_(and (< (js/Math.abs (- (:x p1) (:x p2))) d)
-         (< (js/Math.abs (- (:y p1) (:y p2))) d)))
+  (< (distance p1 p2) (+ (:radius p1) (:radius p2))))
 
-(defn random-xyr [width height {:keys [padding min-r max-r existing retries max-retries] :or {padding 0
-                                                                                              min-r 1
-                                                                                              max-retries 50
-                                                                                              retries 0
-                                                                                              max-r 1
-                                                                                              existing []} :as opts}]
-  (when (< 1 retries) (println "Random ball collided, retrying for the" (str retries
-                                                                             (cond
-                                                                               (< 10 (mod retries 100) 14)
-                                                                               "th"
-
-                                                                               (= (mod retries 10) 1)
-                                                                               "st"
-
-                                                                               (= (mod retries 10) 2)
-                                                                               "nd"
-
-                                                                               (= (mod retries 10) 3)
-                                                                               "rd"
-
-                                                                               :else
-                                                                               "th")) "time"))
+(defn random-xyr [width height {:keys [padding min-r max-r existing retries max-retries]
+                                :or {padding 0
+                                     min-r 1
+                                     max-retries 50
+                                     retries 0
+                                     max-r 1
+                                     existing []} :as opts}]
   (let [r (+ min-r (if (and max-r (< min-r max-r))
                      (rand-int (inc (- max-r min-r)))
                      0))
@@ -82,8 +67,8 @@
     (set-anchor sprite 0.5 0.5)))
 
 (defn set-graphics-position [{:keys [graphics x y velocity width height] :as entity}]
-  (set! (.-x (.-position graphics)) x)
-  (set! (.-y (.-position graphics)) y)
+  (when x (set! (.-x (.-position graphics)) x))
+  (when y (set! (.-y (.-position graphics)) y))
   (when velocity (set! (.-rotation graphics) (js/Math.atan2 (:y velocity) (:x velocity))))
   (when width (set! (.-width graphics) width))
   (when height (set! (.-height graphics) height))
@@ -222,9 +207,8 @@
               :stage stage
               :renderer (init-renderer canvas width height)
               :ticker ticker)
-      (vswap! state init-fn)
-      (add-stage-on-click-event state)
-      (init-scene state)
+      (init-fn state)
       (init-render-loop state)
-      (.start ticker)
-      (render-loop state))))
+      (render-loop state)
+      (.update ticker (js/Date.now))
+      (.start ticker))))
