@@ -48,9 +48,11 @@
     actors))
 
 (defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
-  (js/Math.sqrt
-    (+ (js/Math.pow (js/Math.abs (- x1 x2)) 2)
-       (js/Math.pow (js/Math.abs (- y1 y2)) 2))))
+  (if js/Math.hypot
+    (js/Math.hypot (js/Math.abs (- x1 x2)) (js/Math.abs (- y1 y2)))
+    (js/Math.sqrt
+      (+ (js/Math.pow (js/Math.abs (- x1 x2)) 2)
+         (js/Math.pow (js/Math.abs (- y1 y2)) 2)))))
 
 (defn collides? [p1 p2]
   (< (distance p1 p2) (+ (:radius p1) (:radius p2)))
@@ -71,24 +73,32 @@
   (engine/init-scene state)
   (engine/init-render-loop state))
 
-(defn restart-button [{:keys [width height]}]
-  (ui/button {:label    "restart"
+(defn final-score [{:keys [width height score]}]
+  (ui/text-box {:x 20 :y 20 :text (str "Final Score: " score " prizes collected!")}))
+
+(defn restart-button [{:keys [width height score total-prizes]}]
+  (ui/button {:label    (if (= score total-prizes) "You Win" "Try Again")
               :x        (- (/ width 2) 100)
               :y        (- (/ height 2) 25)
               :width    200
               :height   50
               :on-click restart}))
 
+(defn end-game-screen [state]
+  (let [button (restart-button state)
+        score  (final-score state)]
+    (engine/add-actor-to-stage state button)
+    (engine/add-actor-to-stage state score)
+    (-> state
+        (assoc :score 0 :game-state :game-over)
+        (update :actors into [button score]))))
+
 (defn deathzone-collisions [state player deathzones]
   (if (and deathzones (some (fn [zone] (collides? player zone)) deathzones))
-    (let [button (restart-button state)]
-      (engine/add-actor-to-stage state button)
-      (-> state
-          (assoc :game-state :game-over)
-          (update :actors conj button)))
+    (end-game-screen state)
     state))
 
-(defn prize-collisions [{:keys [stage] :as state} {pr :radius :as player} prizes]
+(defn find-prize-collisions [{:keys [stage] :as state} player prizes]
   (reduce
     (fn [state {:keys [id] :as prize}]
       (if (collides? player prize)
@@ -101,13 +111,19 @@
     state
     prizes))
 
+(defn prize-collisions [state player prizes]
+  (let [{:keys [total-prizes score] :as new-state} (find-prize-collisions state player prizes)]
+    (if (= total-prizes score)
+      (end-game-screen new-state)
+      new-state)))
+
 (defn collisions [{:keys [actors] :as state}]
   (let [{player     :player
          deathzones :deathzones
          prizes     :prizes} (group-actors-by-type actors)]
     (-> state
         (deathzone-collisions player deathzones)
-        #_(prize-collisions player prizes))))
+        (prize-collisions player prizes))))
 
 (defn update-game-state [state]
   (when (engine/started? state)
@@ -152,6 +168,7 @@
       (add-deathzones state))))
 
 (def initial-state-map {:score        0
+                        :total-prizes 5
                         :game-state   :started
                         :vector-field nil
                         :force-radius 25

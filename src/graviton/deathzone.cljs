@@ -46,7 +46,7 @@
 
 (defn random-deathzone [state]
   (let [[x y] (random-coords state)
-        deathzone (instance x y (+ 50 (rand-int 10)))]
+        deathzone (instance x y (+ 20 (rand-int 10)))]
     ((:init deathzone) deathzone state)
     (engine/add-actor-to-stage state deathzone)
     (update state :actors conj deathzone)))

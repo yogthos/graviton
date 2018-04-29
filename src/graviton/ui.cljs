@@ -28,13 +28,12 @@
                  button)
      :update   (fn [])}))
 
-(defn text-box [{:keys [text x y width height]}]
-  {:graphics (js/PIXI.Text. text (js/PIXI.TextStyle.
+(defn text-box [{:keys [text x y]}]
+  {:x        x
+   :y        y
+   :graphics (js/PIXI.Text. text (js/PIXI.TextStyle.
                                    #js {:fill       "#FF00FF"
                                         :fontSize   30
                                         :fontFamily "Arial"}))
-   :init     (fn [{:keys [graphics] :as text} state]
-               (engine/set-graphics-position text)
-               (.addChild (:stage state) graphics)
-               text)
+   :init     (fn [text state] text)
    :update   (fn [])})

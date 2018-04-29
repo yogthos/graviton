@@ -14,8 +14,7 @@
    :x        x
    :y        y
    :mass     0
-   :width    radius
-   :height   radius
+   :radius   radius
    :graphics (js/PIXI.Graphics.)
    :init     (fn [prize state]
                (engine/draw-circle
@@ -30,11 +29,11 @@
                prize)
    :update   (fn [prize state] prize)})
 
-(defn random-prizes [{:keys [width height] :as state}]
+(defn random-prizes [{:keys [width height total-prizes] :as state}]
   (update state
           :actors
           into
-          (for [_ (range 5)]
+          (for [_ (range total-prizes)]
             (instance
               (rand-int (- width 100))
               (rand-int (- height 100))

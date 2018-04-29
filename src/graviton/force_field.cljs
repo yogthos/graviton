@@ -7,8 +7,8 @@
   (/ v (+ 1 (js/Math.abs v))))
 
 
-(defn draw-gravity-vector [graphics x y {:keys [force-radius vector-field] :as state}]
-  (let [{ax :x ay :y :as acceleration} (gravitational-acceleration-at-point force-radius x y vector-field)
+(defn draw-gravity-vector [graphics x y {:keys [force-radius vector-field]}]
+  (let [{ax :x ay :y} (gravitational-acceleration-at-point force-radius x y vector-field)
         ax         (* 100 ax)
         ay         (* 100 ay)
         magnitude  (+ (* ax ax) (* ay ay))
