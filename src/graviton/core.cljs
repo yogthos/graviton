@@ -52,11 +52,12 @@
 
 (defn restart []
   (vswap! state assoc :game-state :stopped)
+  (.stop (:ticker @state))
   (engine/clear-stage @state)
   (vswap! state
           (fn [current-state]
             (-> current-state
-                (merge (select-keys initial-state-map [:game-state :background :actors :foreground :vector-field]))
+                (merge (select-keys (initial-state-map) [:game-state :background :actors :foreground :vector-field]))
                 (prizes/random-prizes))))
   (engine/init-scene state)
   (engine/init-render-loop state))
@@ -155,20 +156,21 @@
       (update-scene-objects state)
       (add-deathzones state))))
 
-(def initial-state-map {:score        0
-                        :total-prizes 5
-                        :game-state   :started
-                        :vector-field nil
-                        :force-radius 25
-                        :on-drag      (stage-click-drag add-attractor)
-                        :update       update-game-state
-                        :background   [(force-field/instance)]
-                        ; menus, score, etc
-                        :foreground   []
-                        :actors       [(ship/instance state)]})
+(defn initial-state-map []
+  {:score        0
+   :total-prizes 5
+   :game-state   :started
+   :vector-field nil
+   :force-radius 25
+   :on-drag      (stage-click-drag add-attractor)
+   :update       update-game-state
+   :background   [(force-field/instance)]
+                                        ; menus, score, etc
+   :foreground   []
+   :actors       [(ship/instance state)]})
 
 (defn init-state [state]
-  (vreset! state initial-state-map))
+  (vreset! state (initial-state-map)))
 
 (defn canvas [state]
   (r/create-class
