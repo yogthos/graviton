@@ -66,7 +66,7 @@
                       "Have fun!"
                       ""
                       ""
-                      "Game by Scot Brown & Dmitri Sotniov"]
+                      "Game by Scot Brown & Dmitri Sotnikov"]
         instructions (map-indexed (fn [idx text]
                                     (let [text (text-field text 15)]
                                       (set! (.-x text) 50)
