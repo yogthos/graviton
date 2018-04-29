@@ -18,7 +18,7 @@
         max-length 8
         color      (+ (* (js/Math.round (* 0xff (sigmoid (* magnitude redness)))) 0x10000)
                       (- 0xff00 (* (js/Math.round (* 0xff (sigmoid (/ magnitude greenness)))) 0x100)))
-        width      (* 2 (sigmoid (* 5 magnitude)))]
+        width      (* 3 (sigmoid (* 5 magnitude)))]
 
     ;; Change max-length truncation to preserve direction
     (engine/draw-line graphics {:color color

@@ -26,7 +26,7 @@
 
 (defn instance [state x y radius]
   (let [radius (min 150 radius)
-        mass   (/ (* radius radius) 25)]
+        mass   (/ (* radius radius) 60)]
     {:id           (keyword (str "attractor-" x y))
      :type         :attractor
      :x            x
@@ -40,7 +40,7 @@
                      (engine/draw-circle
                        (:graphics attractor)
                        {:line-color     (color radius)
-                        :line-thickness 5
+                        :line-thickness 1
                         :x              0
                         :y              0
                         :radius         radius})

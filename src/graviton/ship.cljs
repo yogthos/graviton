@@ -13,7 +13,7 @@
   (let [{ax :x
          ay :y
          :as acceleration} (gravitational-acceleration-at-point force-radius x y vector-field)
-        acceleration (if (< 1 (+ (* ax ax) (* ay ay))) {:x 0 :y 0} acceleration)
+        acceleration (if (< 1 (+ (* ax ax) (* ay ay))) {:x -1 :y -1} acceleration)
         velocity     (-> (merge-with + {:x (delta-x acceleration delta)
                                         :y (delta-y acceleration delta)} velocity)
                          (update :x #(* % (if
