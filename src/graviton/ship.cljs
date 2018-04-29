@@ -58,13 +58,14 @@
      :mass     35
      :init     (fn [ship state]
                  (engine/drag-event (:graphics ship) state-atom {:on-start (fn [state event]
-                                                                             (.on (:graphics ship) "pointermove" (fn [event]
-                                                                                                                   (let [state @state-atom
-                                                                                                                         {:keys [x y] :as actor} (some #(when (= :ship (:id %)) %) (:actors state))
-                                                                                                                         local-pos (.-global (.-data event))
-                                                                                                                         dx (- (.-x local-pos) x)
-                                                                                                                         dy (- (.-y local-pos) y)]
-                                                                                                                     (engine/set-graphics-position (assoc actor :velocity {:x dx :y dy}))))))
+                                                                             (when (<= 1 (count (filterv #(= :attractor (:type %)) (:actors @state-atom))))
+                                                                               (.on (:graphics ship) "pointermove" (fn [event]
+                                                                                                                     (let [state @state-atom
+                                                                                                                           {:keys [x y] :as actor} (some #(when (= :ship (:id %)) %) (:actors state))
+                                                                                                                           local-pos (.-global (.-data event))
+                                                                                                                           dx (- (.-x local-pos) x)
+                                                                                                                           dy (- (.-y local-pos) y)]
+                                                                                                                       (engine/set-graphics-position (assoc actor :velocity {:x dx :y dy})))))))
                                                                  :on-end (fn [state event]
                                                                            (when  (<= 1 (count (filterv #(= :attractor (:type %)) (:actors state))))
                                                                                  (let [local-pos (.getLocalPosition (.-data event) (:stage state))
@@ -75,7 +76,7 @@
                                                                                    (update state :actors #(mapv (fn [actor] (if (= (:id actor) :ship)
                                                                                                                               (let [dx (- x (:x actor))
                                                                                                                                     dy (- y (:y actor))
-                                                                                                                                    scale (* 2 (/ (engine/sigmoid (+ (* dx dx) (* dy dy))) (js/Math.sqrt (+ (* dx dx) (* dy dy)))))
+                                                                                                                                    scale (* 3 (/ (engine/sigmoid (+ (* dx dx) (* dy dy))) (js/Math.sqrt (+ (* dx dx) (* dy dy)))))
                                                                                                                                     velocity {:x (* dx scale)
                                                                                                                                               :y (* dy scale)}]
                                                                                                                                 (println "click: " x ", " y " -- actor: " (:x actor) ", " (:y actor) " -- delta: " dx ", " dy " -- Velocity: " velocity)
