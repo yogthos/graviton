@@ -160,9 +160,9 @@
 (defn initial-state-map []
   {:score        0
    :total-prizes 5
-   :game-state    :stopped
+   :game-state   :stopped
    :vector-field nil
-   :force-radius 25
+   :force-radius 20
    :on-drag      (stage-click-drag add-attractor)
    :update       update-game-state
    :background   [(force-field/instance)]
