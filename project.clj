@@ -45,7 +45,7 @@
                        :release
                        {:source-paths ["src" "env/prod/cljs"]
                         :compiler
-                        {:output-to "public/js/app.js"
+                        {:output-to "release/js/graviton.min.js"
                          :output-dir "public/js/release"
                          :asset-path   "js/out"
                          :optimizations :advanced

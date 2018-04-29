@@ -1,3 +1,10 @@
+## Graviton
+
+Graviton is a physics based game where the player collects green prizes while avoiding red death zones.
+
+The player adds gravitational attractors on the screen by clicking and dragging the mouse,
+and the ship follows the gravity fields. The more gravitational attractors are added the more
+death zones will be spawned on the screen.
 
 ### Development mode
 
