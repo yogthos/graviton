@@ -60,10 +60,13 @@
         text-lines   ["Instructions:"
                       ""
                       "Drag to create gravity wells that will guide your ship to the prizes"
-                      "Once you're ready to launch (and have placed at least one attractor), Click and drag on your ship to blast off!"
-                      "Keep placing attractors if you need to, but be careful! If you place too many, you'll create death zones that will end the game if touched!"
+                      "The ship will start moving along the gravity fields"
+                      "Keep placing attractors if you need to, but be careful! If you place too many, you'll create death zones that will end the game when touched!"
                       ""
-                      "Have fun!"]
+                      "Have fun!"
+                      ""
+                      ""
+                      "Game by Scot Brown & Dmitri Sotniov"]
         instructions (map-indexed (fn [idx text]
                                     (let [text (text-field text 15)]
                                       (set! (.-x text) 50)
