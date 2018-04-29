@@ -66,7 +66,7 @@
                                                                                                                          dy (- (.-y local-pos) y)]
                                                                                                                      (engine/set-graphics-position (assoc actor :velocity {:x dx :y dy}))))))
                                                                  :on-end (fn [state event]
-                                                                           (when true #_(<= 1 (count (filterv #(= :attractor (:type %)) (:actors state))))
+                                                                           (when  (<= 1 (count (filterv #(= :attractor (:type %)) (:actors state))))
                                                                                  (let [local-pos (.getLocalPosition (.-data event) (:stage state))
                                                                                        x (.-x local-pos)
                                                                                        y (.-y local-pos)]

@@ -180,15 +180,30 @@
      (fn []
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))
 
+(def game-started (r/atom false))
+
 (defn game []
   [canvas state])
-
-;; -------------------------
-;; Initialize app
 
 (defn mount-root []
   (init-state state)
   (r/render [game] (.getElementById js/document "app")))
 
+(defn intro []
+  [:div
+   [:h1 "Graviton"]
+   [:h3 "Instructions: "]
+   [:ol
+    [:li "Drag to create gravity wells that will guide your ship to the prizes"]
+    [:li "Once you're ready to launch (and have placed at least one attractor), Click and drag on your ship to blast off!"]
+    [:li "Keep placing attractors if you need to, but be careful! If you place too many, you'll create death zones that will end the game if touched!"]
+    [:li "Have fun!"]]
+   [:button {:on-click #(mount-root)} "Start Graviton!"]])
+
+;; -------------------------
+;; Initialize app
+
+
+
 (defn init! []
-  (mount-root))
+  (r/render [intro] (.getElementById js/document "app")))
