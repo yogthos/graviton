@@ -1,11 +1,19 @@
 (ns graviton.ui
-  (:require [graviton.engine :as engine]))
+  (:require [graviton.engine :as engine]
+            [graviton.prizes :as prizes]))
 
 (defn text-field [text size]
   (-> (js/PIXI.Text. text (js/PIXI.TextStyle.
                             #js {:fill       "#FF00FF"
                                  :fontSize   size
                                  :fontFamily "Arial"}))))
+
+(defn text-box [{:keys [text x y]}]
+  {:x        x
+   :y        y
+   :graphics (text-field text 30)
+   :init     (fn [text state] text)
+   :update   (fn [])})
 
 (defn button [{:keys [label on-click x y width height]}]
   (let [text   (engine/set-anchor (text-field label 30) 0.5 0.5)
@@ -32,15 +40,17 @@
 
 (defn start-button [state parent-graphics]
   (let [graphics (doto (js/PIXI.Graphics.)
-                   (.addChild (engine/set-anchor (text-field "START" 30) 0.5 0.5))
-                   (.on "pointerdown" #(do
-                                         (println "clicked")
-                                         (.removeChild (:stage @state) parent-graphics)
-                                         (vswap! state assoc :game-state :started)))
                    (.lineStyle 2 0xFF00FF 1)
                    (.beginFill 0xFF00BB 0.25)
-                   (.drawRoundedRect 0 0 120 50 15)
-                   (.endFill))]
+                   (.drawRoundedRect -10 -3 120 40 15)
+                   (.endFill)
+                   (.addChild (text-field "START" 30))
+                   (.on "pointerdown" #(do
+                                         (.removeChild (:stage @state) parent-graphics)
+                                         (vswap! state assoc :game-state :started)
+                                         (vswap! state prizes/random-prizes)
+                                         (engine/add-stage-on-click-event state)
+                                         (engine/init-scene state))))]
     (set! (.-interactive graphics) true)
     (set! (.-buttonMode graphics) true)
     graphics))
@@ -63,20 +73,8 @@
         button       (start-button state graphics)]
     (doseq [line instructions]
       (.addChild graphics line))
-    (set! (.-x button) (/ (:width @state) 2))
-    (set! (.-y button) (/ (:height @state) 2))
+    (set! (.-x button) (- (/ (:width @state) 2) 60))
+    (set! (.-y button) (- (/ (:height @state) 2) 20))
     (.addChild graphics button)
-
-    (.on graphics "mousedown" #(do
-                          (println "parent  clicked")
-                          (.removeChild (:stage @state) graphics)
-                          (vswap! state assoc :game-state :started)))
     (.addChild (:stage @state) graphics)
     state))
-
-(defn text-box [{:keys [text x y]}]
-  {:x        x
-   :y        y
-   :graphics (text-field text 30)
-   :init     (fn [text state] text)
-   :update   (fn [])})

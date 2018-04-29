@@ -52,7 +52,6 @@
 
 (defn restart []
   (vswap! state assoc :game-state :stopped)
-
   (engine/clear-stage @state)
   (vswap! state
           (fn [current-state]
@@ -61,6 +60,7 @@
                 (prizes/random-prizes))))
   (engine/init-scene state)
   (engine/init-render-loop state)
+  (vswap! state assoc :game-state :started)
   (.start (:ticker @state)))
 
 (defn final-score [{:keys [width height score]}]
@@ -160,7 +160,7 @@
 (defn initial-state-map []
   {:score        0
    :total-prizes 5
-   :game-state   :started #_:stopped
+   :game-state    :stopped
    :vector-field nil
    :force-radius 25
    :on-drag      (stage-click-drag add-attractor)
@@ -175,7 +175,7 @@
 (defn canvas [state]
   (r/create-class
     {:component-did-mount
-     (engine/init-canvas state #(-> % #_ui/help-menu (vswap! prizes/random-prizes)))
+     (engine/init-canvas state ui/help-menu)
      :render
      (fn []
        [:canvas {:width (.-innerWidth js/window) :height (.-innerHeight js/window)}])}))

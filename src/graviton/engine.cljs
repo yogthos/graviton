@@ -208,8 +208,6 @@
               :renderer (init-renderer canvas width height)
               :ticker ticker)
       (init-fn state)
-      (add-stage-on-click-event state)
-      (init-scene state)
       (init-render-loop state)
       (render-loop state)
       (.update ticker (js/Date.now))
