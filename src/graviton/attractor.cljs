@@ -25,7 +25,7 @@
   (reduce (fn [acc n] (+ n (* 256 acc))) (repeat 3 (let [size (int (* 1.5 radius))] (if (< size 256) size 255)))))
 
 (defn instance [state x y radius]
-  (let [radius (min 150 radius)
+  (let [radius (min 100 radius)
         mass   (/ (* radius radius) 10)]
     {:id           (keyword (str "attractor-" x y))
      :type         :attractor
