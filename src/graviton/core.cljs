@@ -165,7 +165,7 @@
                         :background   [(force-field/instance)]
                         ; menus, score, etc
                         :foreground   []
-                        :actors       [(ship/instance)]})
+                        :actors       [(ship/instance state)]})
 
 (defn init-state [state]
   (vreset! state initial-state-map))

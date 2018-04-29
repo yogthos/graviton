@@ -3,9 +3,6 @@
     [graviton.engine :as engine]
     [graviton.physics :as physics :refer [gravitational-acceleration-at-point]]))
 
-(defn sigmoid [v]
-  (/ v (+ 1 (js/Math.abs v))))
-
 
 (defn draw-gravity-vector [graphics x y {:keys [force-radius vector-field]}]
   (let [{ax :x ay :y} (gravitational-acceleration-at-point force-radius x y vector-field)
@@ -16,17 +13,17 @@
         redness    1
         greenness  100
         max-length 8
-        color      (+ (* (max 0x00 (- (js/Math.round (* 0x1cb (sigmoid (* magnitude redness)))) 0xcc)) 0x10000)
-                      (- 0xff00 (* (+ 0x00 (js/Math.round (* 0xff (sigmoid (/ magnitude greenness))))) 0x100)))
-        width      (* 3 (sigmoid (* 5 magnitude)))]
+        color      (+ (* (max 0x00 (- (js/Math.round (* 0x1cb (engine/sigmoid (* magnitude redness)))) 0xcc)) 0x10000)
+                      (- 0xff00 (* (+ 0x00 (js/Math.round (* 0xff (engine/sigmoid (/ magnitude greenness))))) 0x100)))
+        width      (* 3 (engine/sigmoid (* 5 magnitude)))]
 
     ;; Change max-length truncation to preserve direction
     (engine/draw-line graphics {:color color
                                 :width width
                                 :start {:x x
                                         :y y}
-                                :end   {:x (+ x (* max-length (js/Math.sin theta) (sigmoid magnitude)))
-                                        :y (+ y (* max-length (js/Math.cos theta) (sigmoid magnitude)))}})))
+                                :end   {:x (+ x (* max-length (js/Math.sin theta) (engine/sigmoid magnitude)))
+                                        :y (+ y (* max-length (js/Math.cos theta) (engine/sigmoid magnitude)))}})))
 
 (defn draw-vector-field [vector-field state]
   (let [spacing  (:force-radius state)

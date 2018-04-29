@@ -38,23 +38,49 @@
   (doto (js/PIXI.Graphics.)
     (.beginFill 0x3355ff 0.5)
     (.lineStyle 3 0xFF5500)
-    (.moveTo 0 0)
-    (.lineTo 25 10)
-    (.lineTo 0 20)
-    (.lineTo 0 0)
+    (.moveTo -12.5 -10)
+    (.lineTo 12.5 0)
+    (.lineTo -12.5 10)
+    (.lineTo -12.5 -10)
     (.endFill)))
 
-(defn instance []
-  {:id       :ship
-   :type     :player
-   :graphics (ship-icon)
-   :z-index  1
-   :velocity {:y 0 :x 0}
-   :width    25
-   :height   20
-   :radius   10
-   :mass     35
-   :init     (fn [ship state]
-               (assoc ship :x (/ (:width state) 2)
-                           :y (/ (:height state) 2)))
-   :update   move-ship})
+(defn instance [state-atom]
+  (let [ship-entity (ship-icon)]
+    (set! (.-interactive ship-entity) true)
+    {:id       :ship
+     :type     :player
+     :graphics ship-entity
+     :z-index  1
+     :velocity {:y 0 :x 0}
+     :width    25
+     :height   20
+     :radius   10
+     :mass     35
+     :init     (fn [ship state]
+                 (engine/drag-event (:graphics ship) state-atom {:on-start (fn [state event]
+                                                                             (.on (:graphics ship) "pointermove" (fn [event]
+                                                                                                                   (let [state @state-atom
+                                                                                                                         {:keys [x y] :as actor} (some #(when (= :ship (:id %)) %) (:actors state))
+                                                                                                                         local-pos (.-global (.-data event))
+                                                                                                                         dx (- (.-x local-pos) x)
+                                                                                                                         dy (- (.-y local-pos) y)]
+                                                                                                                     (engine/set-graphics-position (assoc actor :velocity {:x dx :y dy}))))))
+                                                                 :on-end (fn [state event]
+                                                                           (when true #_(<= 1 (count (filterv #(= :attractor (:type %)) (:actors state))))
+                                                                                 (let [local-pos (.getLocalPosition (.-data event) (:stage state))
+                                                                                       x (.-x local-pos)
+                                                                                       y (.-y local-pos)]
+                                                                                   (.start (:ticker state))
+                                                                                   (set! (.-interactive ship-entity) false)
+                                                                                   (update state :actors #(mapv (fn [actor] (if (= (:id actor) :ship)
+                                                                                                                              (let [dx (- x (:x actor))
+                                                                                                                                    dy (- y (:y actor))
+                                                                                                                                    scale (* 2 (/ (engine/sigmoid (+ (* dx dx) (* dy dy))) (js/Math.sqrt (+ (* dx dx) (* dy dy)))))
+                                                                                                                                    velocity {:x (* dx scale)
+                                                                                                                                              :y (* dy scale)}]
+                                                                                                                                (println "click: " x ", " y " -- actor: " (:x actor) ", " (:y actor) " -- delta: " dx ", " dy " -- Velocity: " velocity)
+                                                                                                                                (assoc actor :velocity velocity))
+                                                                                                                              actor)) %)))))})
+                 (assoc ship :x (/ (:width state) 2)
+                        :y (/ (:height state) 2)))
+     :update   move-ship}))

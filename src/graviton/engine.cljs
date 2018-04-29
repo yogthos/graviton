@@ -11,6 +11,10 @@
 (defn set-anchor [obj x y]
   (.set (.-anchor obj) x y)
   obj)
+
+(defn sigmoid [v]
+  (/ v (+ 1 (js/Math.abs v))))
+
 (defn distance [{x1 :x y1 :y} {x2 :x y2 :y}]
   (if js/Math.hypot
     (js/Math.hypot (js/Math.abs (- x1 x2)) (js/Math.abs (- y1 y2)))
@@ -82,8 +86,8 @@
     (set-anchor sprite 0.5 0.5)))
 
 (defn set-graphics-position [{:keys [graphics x y velocity width height] :as entity}]
-  (set! (.-x (.-position graphics)) x)
-  (set! (.-y (.-position graphics)) y)
+  (when x (set! (.-x (.-position graphics)) x))
+  (when y (set! (.-y (.-position graphics)) y))
   (when velocity (set! (.-rotation graphics) (js/Math.atan2 (:y velocity) (:x velocity))))
   (when width (set! (.-width graphics) width))
   (when height (set! (.-height graphics) height))
@@ -226,5 +230,5 @@
       (add-stage-on-click-event state)
       (init-scene state)
       (init-render-loop state)
-      (.start ticker)
-      (render-loop state))))
+      (render-loop state)
+      (.update ticker (js/Date.now)))))
