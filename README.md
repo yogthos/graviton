@@ -6,7 +6,7 @@ The player adds gravitational attractors on the screen by clicking and dragging 
 and the ship follows the gravity fields. The more gravitational attractors are added the more
 death zones will be spawned on the screen.
 
-[play the game in the browser](https://cdn.rawgit.com/yogthos/graviton/game-jam/release/graviton.html)
+[play the game in the browser](https://svmbrown.itch.io/graviton)
 
 ### Development mode
 
